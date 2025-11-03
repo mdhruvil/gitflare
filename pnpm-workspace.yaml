@@ -1,0 +1,14 @@
+packages:
+  - apps/*
+  - packages/*
+
+catalog:
+  '@convex-dev/better-auth': ^0.9.1
+  better-auth: 1.3.27
+  convex: ^1.27.0
+  typescript: ^5.7.2
+
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
