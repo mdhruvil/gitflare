@@ -7,20 +7,13 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "target": "ESNext",
-    "lib": [
-      "ES2021",
-      "dom"
-    ],
+    "lib": ["ES2021", "dom"],
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "isolatedModules": true,
     "noEmit": true,
     "strictNullChecks": true
   },
-  "include": [
-    "./**/*"
-  ],
-  "exclude": [
-    "./_generated"
-  ]
+  "include": ["./**/*"],
+  "exclude": ["./_generated"]
 }

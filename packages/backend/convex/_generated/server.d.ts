@@ -10,7 +10,6 @@
 
 import {
   ActionBuilder,
-  AnyComponents,
   HttpActionBuilder,
   MutationBuilder,
   QueryBuilder,
@@ -19,7 +18,6 @@ import {
   GenericQueryCtx,
   GenericDatabaseReader,
   GenericDatabaseWriter,
-  FunctionReference,
 } from "convex/server";
 import type { DataModel } from "./dataModel.js";
 

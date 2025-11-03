@@ -7,14 +7,10 @@
     "packages/*"
   ],
   "scripts": {
-    "check": "biome check --write .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
     "dev": "turbo dev",
-    "build": "turbo build",
-    "check-types": "turbo check-types",
-    "dev:native": "turbo -F native dev",
-    "dev:web": "turbo -F web dev",
-    "dev:server": "turbo -F @gitvex/backend dev",
-    "dev:setup": "turbo -F @gitvex/backend dev:setup"
+    "build": "turbo build"
   },
   "dependencies": {},
   "devDependencies": {

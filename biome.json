@@ -18,12 +18,73 @@
       "!**/.wrangler",
       "!**/.alchemy",
       "!**/.svelte-kit",
-      "!**/wrangler.jsonc",
-      "!**/.source"
+      "!**/.source",
+      "!**/convex/_generated"
     ]
   },
-  "extends": [
-    "ultracite/core",
-    "ultracite/react"
+  "extends": ["ultracite/core", "ultracite/react"],
+  "json": {
+    "parser": {
+      "allowComments": true,
+      "allowTrailingCommas": true
+    },
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
+  "linter": {
+    "domains": {
+      "react": "recommended"
+    },
+    "rules": {
+      "suspicious": {
+        "noConsole": "off",
+        "noUnknownAtRules": "off",
+        "noEmptyBlock": "off",
+        "noEmptyBlockStatements": "off"
+      },
+      "performance": {
+        "noNamespaceImport": "off"
+      },
+      "style": {
+        "noMagicNumbers": "off",
+        "useConsistentMemberAccessibility": "off",
+        "useBlockStatements": "off"
+      },
+      "nursery": {
+        "noShadow": "off"
+      },
+      "complexity": {
+        "useSimplifiedLogicExpression": "off",
+        "noExcessiveCognitiveComplexity": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/convex/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/$.ts", "$.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
+          }
+        }
+      }
+    }
   ]
 }

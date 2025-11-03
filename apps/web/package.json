@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "@gitvex/web",
   "private": true,
   "type": "module",
   "scripts": {
