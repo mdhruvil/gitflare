@@ -19,7 +19,8 @@
       "!**/.alchemy",
       "!**/.svelte-kit",
       "!**/.source",
-      "!**/convex/_generated"
+      "!**/convex/**/_generated",
+      "!**/worker-configuration.d.ts"
     ]
   },
   "extends": ["ultracite/core", "ultracite/react"],
@@ -41,10 +42,12 @@
         "noConsole": "off",
         "noUnknownAtRules": "off",
         "noEmptyBlock": "off",
-        "noEmptyBlockStatements": "off"
+        "noEmptyBlockStatements": "off",
+        "useAwait": "off"
       },
       "performance": {
-        "noNamespaceImport": "off"
+        "noNamespaceImport": "off",
+        "useTopLevelRegex": "off"
       },
       "style": {
         "noMagicNumbers": "off",
@@ -56,7 +59,8 @@
       },
       "complexity": {
         "useSimplifiedLogicExpression": "off",
-        "noExcessiveCognitiveComplexity": "off"
+        "noExcessiveCognitiveComplexity": "off",
+        "noStaticOnlyClass": "off"
       }
     }
   },

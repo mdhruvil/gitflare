@@ -13,6 +13,8 @@ import { Route as TodosRouteImport } from './routes/todos'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as UserRepoGitReceivePackRouteImport } from './routes/$user/$repo/git-receive-pack'
+import { Route as UserRepoInfoRefsRouteImport } from './routes/$user/$repo/info/refs'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
@@ -34,39 +36,76 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UserRepoGitReceivePackRoute = UserRepoGitReceivePackRouteImport.update({
+  id: '/$user/$repo/git-receive-pack',
+  path: '/$user/$repo/git-receive-pack',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UserRepoInfoRefsRoute = UserRepoInfoRefsRouteImport.update({
+  id: '/$user/$repo/info/refs',
+  path: '/$user/$repo/info/refs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/todos': typeof TodosRoute
+  '/$user/$repo/git-receive-pack': typeof UserRepoGitReceivePackRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/$user/$repo/info/refs': typeof UserRepoInfoRefsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/todos': typeof TodosRoute
+  '/$user/$repo/git-receive-pack': typeof UserRepoGitReceivePackRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/$user/$repo/info/refs': typeof UserRepoInfoRefsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/todos': typeof TodosRoute
+  '/$user/$repo/git-receive-pack': typeof UserRepoGitReceivePackRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/$user/$repo/info/refs': typeof UserRepoInfoRefsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/todos' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/todos'
+    | '/$user/$repo/git-receive-pack'
+    | '/api/auth/$'
+    | '/$user/$repo/info/refs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/todos' | '/api/auth/$'
-  id: '__root__' | '/' | '/dashboard' | '/todos' | '/api/auth/$'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/todos'
+    | '/$user/$repo/git-receive-pack'
+    | '/api/auth/$'
+    | '/$user/$repo/info/refs'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/todos'
+    | '/$user/$repo/git-receive-pack'
+    | '/api/auth/$'
+    | '/$user/$repo/info/refs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
   TodosRoute: typeof TodosRoute
+  UserRepoGitReceivePackRoute: typeof UserRepoGitReceivePackRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  UserRepoInfoRefsRoute: typeof UserRepoInfoRefsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +138,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$user/$repo/git-receive-pack': {
+      id: '/$user/$repo/git-receive-pack'
+      path: '/$user/$repo/git-receive-pack'
+      fullPath: '/$user/$repo/git-receive-pack'
+      preLoaderRoute: typeof UserRepoGitReceivePackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$user/$repo/info/refs': {
+      id: '/$user/$repo/info/refs'
+      path: '/$user/$repo/info/refs'
+      fullPath: '/$user/$repo/info/refs'
+      preLoaderRoute: typeof UserRepoInfoRefsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -106,7 +159,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   TodosRoute: TodosRoute,
+  UserRepoGitReceivePackRoute: UserRepoGitReceivePackRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  UserRepoInfoRefsRoute: UserRepoInfoRefsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

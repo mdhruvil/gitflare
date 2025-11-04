@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "gitvex",
-  "main": "@tanstack/react-start/server-entry",
+  "main": "src/server.ts",
   "compatibility_date": "2025-09-15",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -9,11 +9,19 @@
   },
   "observability": {
     "enabled": true
-  }
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "CACHE",
-  //     "id": "<Your KV ID>",
-  //   },
-  // ],
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "Repo",
+        "name": "REPO"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "new_sqlite_classes": ["Repo"],
+      "tag": "v1"
+    }
+  ]
 }
