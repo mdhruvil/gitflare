@@ -1,6 +1,7 @@
 import { api } from "@gitvex/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { useMutation } from "convex/react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { fetchQuery } from "@/lib/auth-server";
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomeComponent() {
+  const verifyApiKey = useMutation(api.privateData.verifyApiKey);
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
       <pre className="overflow-x-auto font-mono text-sm">GitVex</pre>
@@ -35,12 +37,27 @@ function HomeComponent() {
                 const { data, error } = await authClient.apiKey.create({
                   name: "test-api-key",
                   prefix: "gvx_",
+                  metadata: {
+                    username: "mdhruvil",
+                  },
                 });
 
                 console.log({ data, error });
               }}
             >
               Create API Keys
+            </Button>
+            <Button
+              onClick={async () => {
+                const data = await verifyApiKey({
+                  apiKey:
+                    "gvx_jfhydxtlusgWyWxRzRdjdmtxfylwWroIjGKQywqftgGfWrpOJYYsDeLgxUHdRJdl",
+                });
+
+                console.log({ data });
+              }}
+            >
+              Verify API Key
             </Button>
             <Button
               onClick={async () => {

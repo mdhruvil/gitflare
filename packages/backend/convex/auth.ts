@@ -32,7 +32,13 @@ function createAuth(
       enabled: true,
       requireEmailVerification: false,
     },
-    plugins: [convex(), username(), apiKey()],
+    plugins: [
+      convex(),
+      username(),
+      apiKey({
+        enableMetadata: true,
+      }),
+    ],
   });
 }
 
