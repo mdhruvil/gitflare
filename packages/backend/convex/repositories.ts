@@ -215,21 +215,37 @@ export const deleteRepository = mutation({
       throw new Error("Not authorized to delete this repository");
     }
 
-    // Delete associated issues
+    // Delete associated issues and their comments
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_repositoryId", (q) => q.eq("repositoryId", args.id))
       .collect();
     for (const issue of issues) {
+      // Delete comments associated with this issue
+      const issueComments = await ctx.db
+        .query("comments")
+        .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+        .collect();
+      for (const comment of issueComments) {
+        await ctx.db.delete(comment._id);
+      }
       await ctx.db.delete(issue._id);
     }
 
-    // Delete associated pull requests
+    // Delete associated pull requests and their comments
     const prs = await ctx.db
       .query("pullRequests")
       .withIndex("by_repositoryId", (q) => q.eq("repositoryId", args.id))
       .collect();
     for (const pr of prs) {
+      // Delete comments associated with this PR
+      const prComments = await ctx.db
+        .query("comments")
+        .withIndex("by_pr", (q) => q.eq("prId", pr._id))
+        .collect();
+      for (const comment of prComments) {
+        await ctx.db.delete(comment._id);
+      }
       await ctx.db.delete(pr._id);
     }
 
