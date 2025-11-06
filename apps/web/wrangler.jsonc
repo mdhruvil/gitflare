@@ -10,6 +10,14 @@
   "observability": {
     "enabled": true
   },
+  "routes": [
+    {
+      "custom_domain": true,
+      "pattern": "gitvex.mdhruvil.page"
+    }
+  ],
+  "preview_urls": false,
+  "workers_dev": false,
   "durable_objects": {
     "bindings": [
       {

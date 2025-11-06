@@ -6,13 +6,16 @@
     "build": "vite build",
     "serve": "vite preview",
     "dev": "vite dev",
-    "deploy": "pnpm run build && wrangler deploy",
-    "cf-typegen": "wrangler types --env-interface Env"
+    "deploy": "wrangler deploy --outdir dist --upload-source-maps --var SENTRY_RELEASE:$(sentry-cli releases propose-version)",
+    "cf-typegen": "wrangler types --env-interface Env",
+    "sentry:sourcemaps": "_SENTRY_RELEASE=$(sentry-cli releases propose-version) && sentry-cli releases new $_SENTRY_RELEASE --org=mdhruvil --project=gitvex-workers && sentry-cli sourcemaps upload --org=mdhruvil --project=gitvex-workers --release=$_SENTRY_RELEASE --strip-prefix 'dist/..' dist",
+    "postdeploy": "pnpm sentry:sourcemaps"
   },
   "dependencies": {
     "@convex-dev/better-auth": "catalog:",
     "@convex-dev/react-query": "^0.0.0-alpha.8",
     "@gitvex/backend": "workspace:*",
+    "@sentry/cloudflare": "^10.23.0",
     "@tailwindcss/vite": "^4.1.8",
     "@tanstack/react-form": "^1.23.5",
     "@tanstack/react-query": "^5.80.6",
@@ -40,6 +43,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.13.8",
+    "@sentry/cli": "^2.58.0",
     "@tanstack/react-router-devtools": "^1.132.31",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
