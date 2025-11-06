@@ -1,5 +1,14 @@
 # Agent Guidelines for gitvex
 
+Gitvex is a selfhosted GitHub alternative which can be hosted on serverless platforms like Cloudflare Workers.
+
+## Tech stack
+
+- Tanstack Start React
+- Convex backend
+- Cloudflare Workers
+- Cloudflare Durable Objects (SQLite backed) to store git repositories
+
 ## IMPORTANT
 
 - Never run `dev` or `build` commands, unless explicitly instructed.
