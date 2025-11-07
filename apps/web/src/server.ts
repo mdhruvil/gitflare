@@ -14,7 +14,7 @@ export default Sentry.withSentry(
   {
     async fetch(req) {
       try {
-        return handler.fetch(req);
+        return await handler.fetch(req);
       } catch (error) {
         Sentry.captureException(error);
 
