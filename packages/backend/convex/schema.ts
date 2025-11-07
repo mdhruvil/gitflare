@@ -8,7 +8,7 @@ export default defineSchema({
   }),
 
   repositories: defineTable({
-    ownerId: v.id("user"),
+    ownerId: v.string(),
     owner: v.string(),
     name: v.string(),
     description: v.optional(v.string()),

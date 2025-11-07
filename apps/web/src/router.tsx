@@ -12,7 +12,6 @@ export function getRouter() {
   if (!CONVEX_URL) {
     throw new Error("VITE_CONVEX_URL is not defined");
   }
-  console.log("Using Convex URL:", CONVEX_URL);
   const convex = new ConvexReactClient(CONVEX_URL, {
     unsavedChangesWarning: false,
   });

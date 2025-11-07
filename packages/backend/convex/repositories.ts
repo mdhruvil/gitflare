@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
 
@@ -43,12 +43,12 @@ export const getByOwnerAndName = query({
       .unique();
 
     if (!repo) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     // Throw error if repository is private and user is not the owner
     if (repo.isPrivate && (!user || repo.ownerId !== user._id)) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     return repo;
@@ -68,18 +68,18 @@ export const create = mutation({
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
 
     if (!user) {
-      throw new Error("Not authenticated");
+      throw new ConvexError("Not authenticated");
     }
 
     if (!user.username) {
-      throw new Error("User does not have a username");
+      throw new ConvexError("User does not have a username");
     }
 
     const username = user.username;
 
     // Validate repository name (basic validation)
     if (!/^[a-zA-Z0-9_-]+$/.test(args.name)) {
-      throw new Error(
+      throw new ConvexError(
         "Repository name can only contain letters, numbers, hyphens, and underscores"
       );
     }
@@ -93,7 +93,7 @@ export const create = mutation({
       .unique();
 
     if (existing) {
-      throw new Error("Repository with this name already exists");
+      throw new ConvexError("Repository with this name already exists");
     }
 
     const newRepoId = await ctx.db.insert("repositories", {
@@ -104,7 +104,14 @@ export const create = mutation({
       isPrivate: args.isPrivate,
     });
 
-    return newRepoId;
+    return {
+      _id: newRepoId,
+      fullName: `${username}/${args.name}`,
+      owner: username,
+      name: args.name,
+      description: args.description,
+      isPrivate: args.isPrivate,
+    };
   },
 });
 
@@ -122,21 +129,21 @@ export const update = mutation({
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
 
     if (!user) {
-      throw new Error("Not authenticated");
+      throw new ConvexError("Not authenticated");
     }
 
     const repo = await ctx.db.get(args.id);
     if (!repo) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     // Check if user is the owner
     if (repo.ownerId !== user._id) {
-      throw new Error("Not authorized to update this repository");
+      throw new ConvexError("Not authorized to update this repository");
     }
 
     if (!user.username) {
-      throw new Error("User does not have a username");
+      throw new ConvexError("User does not have a username");
     }
 
     const username = user.username;
@@ -146,7 +153,7 @@ export const update = mutation({
       const newName = args.name;
 
       if (!/^[a-zA-Z0-9_-]+$/.test(newName)) {
-        throw new Error(
+        throw new ConvexError(
           "Repository name can only contain letters, numbers, hyphens, and underscores"
         );
       }
@@ -159,7 +166,7 @@ export const update = mutation({
         .unique();
 
       if (existing) {
-        throw new Error("Repository with this name already exists");
+        throw new ConvexError("Repository with this name already exists");
       }
     }
 
@@ -184,7 +191,7 @@ export const update = mutation({
 
     const updatedRepo = await ctx.db.get(args.id);
     if (!updatedRepo) {
-      throw new Error("Failed to update repository");
+      throw new ConvexError("Failed to update repository");
     }
 
     return updatedRepo;
@@ -202,17 +209,17 @@ export const deleteRepository = mutation({
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
 
     if (!user) {
-      throw new Error("Not authenticated");
+      throw new ConvexError("Not authenticated");
     }
 
     const repo = await ctx.db.get(args.id);
     if (!repo) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     // Check if user is the owner
     if (repo.ownerId !== user._id) {
-      throw new Error("Not authorized to delete this repository");
+      throw new ConvexError("Not authorized to delete this repository");
     }
 
     // Delete associated issues and their comments

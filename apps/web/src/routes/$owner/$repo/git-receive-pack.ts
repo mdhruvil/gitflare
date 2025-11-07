@@ -1,17 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRepoDOStub } from "@/do/repo";
 
-export const Route = createFileRoute("/$user/$repo/git-upload-pack")({
+export const Route = createFileRoute("/$owner/$repo/git-receive-pack")({
   server: {
     handlers: {
       POST: async ({ request, params }) => {
-        const { user, repo } = params;
-        const stub = getRepoDOStub(`${user}/${repo}`);
+        const { owner, repo } = params;
+        const stub = getRepoDOStub(`${owner}/${repo}`);
         const contentType =
           request.headers.get("Content-Type") ??
-          "application/x-git-upload-pack-request";
+          "application/x-git-receive-pack-request";
 
-        return stub.fetch("https://do/git-upload-pack", {
+        return stub.fetch("https://do/git-receive-pack", {
           method: "POST",
           body: request.body,
           signal: request.signal,

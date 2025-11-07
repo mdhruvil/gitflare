@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { advertiseCapabilities } from "@/git/protocol";
 
-export const Route = createFileRoute("/$user/$repo/info/refs")({
+export const Route = createFileRoute("/$owner/$repo/info/refs")({
   server: {
     handlers: {
       GET: async ({ request, params }) => {
@@ -9,8 +9,8 @@ export const Route = createFileRoute("/$user/$repo/info/refs")({
         const service = url.searchParams.get("service");
 
         if (service === "git-upload-pack" || service === "git-receive-pack") {
-          const { repo, user } = params;
-          const fullRepoName = `${user}/${repo}`;
+          const { repo, owner } = params;
+          const fullRepoName = `${owner}/${repo}`;
 
           return advertiseCapabilities(service, fullRepoName);
         }

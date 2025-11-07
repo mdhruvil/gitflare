@@ -1,4 +1,5 @@
 import { DurableObject, env } from "cloudflare:workers";
+import * as Sentry from "@sentry/cloudflare";
 import { Fs } from "dofs";
 import {
   buildFetchResponse,
@@ -13,7 +14,7 @@ import { IsoGitFs } from "./fs";
 import { createLogger } from "./logger";
 
 export function getRepoDOStub(fullRepoName: string) {
-  return env.REPO.getByName(fullRepoName);
+  return (env.REPO as DurableObjectNamespace<RepoBase>).getByName(fullRepoName);
 }
 
 const logger = createLogger("RepoDO");
@@ -23,7 +24,7 @@ const logger = createLogger("RepoDO");
  * Each DO instance represents a single Git repository.
  * All the data like objects, refs, packfiles and config are stored in DO SQLite storage via DOFS.
  */
-export class Repo extends DurableObject<Env> {
+class RepoBase extends DurableObject<Env> {
   private readonly dofs: Fs;
   private readonly isoGitFs: ReturnType<IsoGitFs["getPromiseFsClient"]>;
   private readonly git: GitService;
@@ -32,12 +33,12 @@ export class Repo extends DurableObject<Env> {
     super(ctx, env);
 
     this.dofs = new Fs(ctx, env, { chunkSize: 512 * 1024 }); // 512KB chunks
-    this.dofs.setDeviceSize(5 * 1024 * 1024 * 1024); // 5GB device size to support large repos
 
     this.isoGitFs = new IsoGitFs(this.dofs).getPromiseFsClient();
     this.git = new GitService(this.isoGitFs, "/repo");
 
     this.ctx.blockConcurrencyWhile(async () => {
+      this.dofs.setDeviceSize(5 * 1024 * 1024 * 1024); // 5GB device size to support large repos
       await this.ensureRepoInitialized();
     });
   }
@@ -172,3 +173,14 @@ export class Repo extends DurableObject<Env> {
     return new Response("Unsupported command", { status: 400 });
   }
 }
+
+// Export your named class as defined in your wrangler config
+export const Repo = Sentry.instrumentDurableObjectWithSentry(
+  (_env: Env) => ({
+    dsn: "https://412acc40471763ed76cfbd92c70a80e4@o4510288569106432.ingest.us.sentry.io/4510318411579392",
+    tracesSampleRate: 1.0,
+    enableLogs: true,
+    integrations: [Sentry.consoleLoggingIntegration()],
+  }),
+  RepoBase
+);

@@ -10,16 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
+import { Route as NewRouteImport } from './routes/new'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OwnerRepoIndexRouteImport } from './routes/$owner/$repo/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as UserRepoGitUploadPackRouteImport } from './routes/$user/$repo/git-upload-pack'
-import { Route as UserRepoGitReceivePackRouteImport } from './routes/$user/$repo/git-receive-pack'
-import { Route as UserRepoInfoRefsRouteImport } from './routes/$user/$repo/info/refs'
+import { Route as OwnerRepoGitUploadPackRouteImport } from './routes/$owner/$repo/git-upload-pack'
+import { Route as OwnerRepoGitReceivePackRouteImport } from './routes/$owner/$repo/git-receive-pack'
+import { Route as OwnerRepoInfoRefsRouteImport } from './routes/$owner/$repo/info/refs'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
   path: '/todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewRoute = NewRouteImport.update({
+  id: '/new',
+  path: '/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -32,93 +39,112 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OwnerRepoIndexRoute = OwnerRepoIndexRouteImport.update({
+  id: '/$owner/$repo/',
+  path: '/$owner/$repo/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserRepoGitUploadPackRoute = UserRepoGitUploadPackRouteImport.update({
-  id: '/$user/$repo/git-upload-pack',
-  path: '/$user/$repo/git-upload-pack',
+const OwnerRepoGitUploadPackRoute = OwnerRepoGitUploadPackRouteImport.update({
+  id: '/$owner/$repo/git-upload-pack',
+  path: '/$owner/$repo/git-upload-pack',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserRepoGitReceivePackRoute = UserRepoGitReceivePackRouteImport.update({
-  id: '/$user/$repo/git-receive-pack',
-  path: '/$user/$repo/git-receive-pack',
+const OwnerRepoGitReceivePackRoute = OwnerRepoGitReceivePackRouteImport.update({
+  id: '/$owner/$repo/git-receive-pack',
+  path: '/$owner/$repo/git-receive-pack',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserRepoInfoRefsRoute = UserRepoInfoRefsRouteImport.update({
-  id: '/$user/$repo/info/refs',
-  path: '/$user/$repo/info/refs',
+const OwnerRepoInfoRefsRoute = OwnerRepoInfoRefsRouteImport.update({
+  id: '/$owner/$repo/info/refs',
+  path: '/$owner/$repo/info/refs',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/new': typeof NewRoute
   '/todos': typeof TodosRoute
-  '/$user/$repo/git-receive-pack': typeof UserRepoGitReceivePackRoute
-  '/$user/$repo/git-upload-pack': typeof UserRepoGitUploadPackRoute
+  '/$owner/$repo/git-receive-pack': typeof OwnerRepoGitReceivePackRoute
+  '/$owner/$repo/git-upload-pack': typeof OwnerRepoGitUploadPackRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/$user/$repo/info/refs': typeof UserRepoInfoRefsRoute
+  '/$owner/$repo': typeof OwnerRepoIndexRoute
+  '/$owner/$repo/info/refs': typeof OwnerRepoInfoRefsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/new': typeof NewRoute
   '/todos': typeof TodosRoute
-  '/$user/$repo/git-receive-pack': typeof UserRepoGitReceivePackRoute
-  '/$user/$repo/git-upload-pack': typeof UserRepoGitUploadPackRoute
+  '/$owner/$repo/git-receive-pack': typeof OwnerRepoGitReceivePackRoute
+  '/$owner/$repo/git-upload-pack': typeof OwnerRepoGitUploadPackRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/$user/$repo/info/refs': typeof UserRepoInfoRefsRoute
+  '/$owner/$repo': typeof OwnerRepoIndexRoute
+  '/$owner/$repo/info/refs': typeof OwnerRepoInfoRefsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/new': typeof NewRoute
   '/todos': typeof TodosRoute
-  '/$user/$repo/git-receive-pack': typeof UserRepoGitReceivePackRoute
-  '/$user/$repo/git-upload-pack': typeof UserRepoGitUploadPackRoute
+  '/$owner/$repo/git-receive-pack': typeof OwnerRepoGitReceivePackRoute
+  '/$owner/$repo/git-upload-pack': typeof OwnerRepoGitUploadPackRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/$user/$repo/info/refs': typeof UserRepoInfoRefsRoute
+  '/$owner/$repo/': typeof OwnerRepoIndexRoute
+  '/$owner/$repo/info/refs': typeof OwnerRepoInfoRefsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/new'
     | '/todos'
-    | '/$user/$repo/git-receive-pack'
-    | '/$user/$repo/git-upload-pack'
+    | '/$owner/$repo/git-receive-pack'
+    | '/$owner/$repo/git-upload-pack'
     | '/api/auth/$'
-    | '/$user/$repo/info/refs'
+    | '/$owner/$repo'
+    | '/$owner/$repo/info/refs'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard'
+    | '/new'
     | '/todos'
-    | '/$user/$repo/git-receive-pack'
-    | '/$user/$repo/git-upload-pack'
+    | '/$owner/$repo/git-receive-pack'
+    | '/$owner/$repo/git-upload-pack'
     | '/api/auth/$'
-    | '/$user/$repo/info/refs'
+    | '/$owner/$repo'
+    | '/$owner/$repo/info/refs'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
+    | '/new'
     | '/todos'
-    | '/$user/$repo/git-receive-pack'
-    | '/$user/$repo/git-upload-pack'
+    | '/$owner/$repo/git-receive-pack'
+    | '/$owner/$repo/git-upload-pack'
     | '/api/auth/$'
-    | '/$user/$repo/info/refs'
+    | '/$owner/$repo/'
+    | '/$owner/$repo/info/refs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
+  NewRoute: typeof NewRoute
   TodosRoute: typeof TodosRoute
-  UserRepoGitReceivePackRoute: typeof UserRepoGitReceivePackRoute
-  UserRepoGitUploadPackRoute: typeof UserRepoGitUploadPackRoute
+  OwnerRepoGitReceivePackRoute: typeof OwnerRepoGitReceivePackRoute
+  OwnerRepoGitUploadPackRoute: typeof OwnerRepoGitUploadPackRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  UserRepoInfoRefsRoute: typeof UserRepoInfoRefsRoute
+  OwnerRepoIndexRoute: typeof OwnerRepoIndexRoute
+  OwnerRepoInfoRefsRoute: typeof OwnerRepoInfoRefsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -128,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/todos'
       fullPath: '/todos'
       preLoaderRoute: typeof TodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/new': {
+      id: '/new'
+      path: '/new'
+      fullPath: '/new'
+      preLoaderRoute: typeof NewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -144,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$owner/$repo/': {
+      id: '/$owner/$repo/'
+      path: '/$owner/$repo'
+      fullPath: '/$owner/$repo'
+      preLoaderRoute: typeof OwnerRepoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -151,25 +191,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$user/$repo/git-upload-pack': {
-      id: '/$user/$repo/git-upload-pack'
-      path: '/$user/$repo/git-upload-pack'
-      fullPath: '/$user/$repo/git-upload-pack'
-      preLoaderRoute: typeof UserRepoGitUploadPackRouteImport
+    '/$owner/$repo/git-upload-pack': {
+      id: '/$owner/$repo/git-upload-pack'
+      path: '/$owner/$repo/git-upload-pack'
+      fullPath: '/$owner/$repo/git-upload-pack'
+      preLoaderRoute: typeof OwnerRepoGitUploadPackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$user/$repo/git-receive-pack': {
-      id: '/$user/$repo/git-receive-pack'
-      path: '/$user/$repo/git-receive-pack'
-      fullPath: '/$user/$repo/git-receive-pack'
-      preLoaderRoute: typeof UserRepoGitReceivePackRouteImport
+    '/$owner/$repo/git-receive-pack': {
+      id: '/$owner/$repo/git-receive-pack'
+      path: '/$owner/$repo/git-receive-pack'
+      fullPath: '/$owner/$repo/git-receive-pack'
+      preLoaderRoute: typeof OwnerRepoGitReceivePackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$user/$repo/info/refs': {
-      id: '/$user/$repo/info/refs'
-      path: '/$user/$repo/info/refs'
-      fullPath: '/$user/$repo/info/refs'
-      preLoaderRoute: typeof UserRepoInfoRefsRouteImport
+    '/$owner/$repo/info/refs': {
+      id: '/$owner/$repo/info/refs'
+      path: '/$owner/$repo/info/refs'
+      fullPath: '/$owner/$repo/info/refs'
+      preLoaderRoute: typeof OwnerRepoInfoRefsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -178,21 +218,24 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
+  NewRoute: NewRoute,
   TodosRoute: TodosRoute,
-  UserRepoGitReceivePackRoute: UserRepoGitReceivePackRoute,
-  UserRepoGitUploadPackRoute: UserRepoGitUploadPackRoute,
+  OwnerRepoGitReceivePackRoute: OwnerRepoGitReceivePackRoute,
+  OwnerRepoGitUploadPackRoute: OwnerRepoGitUploadPackRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  UserRepoInfoRefsRoute: UserRepoInfoRefsRoute,
+  OwnerRepoIndexRoute: OwnerRepoIndexRoute,
+  OwnerRepoInfoRefsRoute: OwnerRepoInfoRefsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
