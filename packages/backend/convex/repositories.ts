@@ -96,8 +96,6 @@ export const create = mutation({
       throw new ConvexError("Repository with this name already exists");
     }
 
-    console.log(user);
-
     const newRepoId = await ctx.db.insert("repositories", {
       ownerId: user._id,
       owner: user.username,
