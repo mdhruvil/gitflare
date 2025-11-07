@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
 
@@ -16,7 +16,7 @@ export const getByRepo = query({
     // Get the repository to check privacy
     const [owner, name] = args.fullName.split("/");
     if (!owner || !name) {
-      throw new Error("Invalid fullName format. Expected 'owner/repo'");
+      throw new ConvexError("Invalid fullName format. Expected 'owner/repo'");
     }
 
     const repo = await ctx.db
@@ -25,12 +25,12 @@ export const getByRepo = query({
       .unique();
 
     if (!repo) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     // Check if user has access to the repository
     if (repo.isPrivate && (!user || repo.ownerId !== user._id)) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     // Get issues filtered by status if provided
@@ -67,7 +67,7 @@ export const getByRepoAndNumber = query({
     // Get the repository to check privacy
     const [owner, name] = args.fullName.split("/");
     if (!owner || !name) {
-      throw new Error("Invalid fullName format. Expected 'owner/repo'");
+      throw new ConvexError("Invalid fullName format. Expected 'owner/repo'");
     }
 
     const repo = await ctx.db
@@ -76,12 +76,12 @@ export const getByRepoAndNumber = query({
       .unique();
 
     if (!repo) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     // Check if user has access to the repository
     if (repo.isPrivate && (!user || repo.ownerId !== user._id)) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     const issue = await ctx.db
@@ -92,7 +92,7 @@ export const getByRepoAndNumber = query({
       .unique();
 
     if (!issue) {
-      throw new Error("Issue not found");
+      throw new ConvexError("Issue not found");
     }
 
     return issue;
@@ -112,13 +112,13 @@ export const create = mutation({
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
 
     if (!user) {
-      throw new Error("Not authenticated");
+      throw new ConvexError("Not authenticated");
     }
 
     // Get the repository
     const [owner, name] = args.fullName.split("/");
     if (!owner || !name) {
-      throw new Error("Invalid fullName format. Expected 'owner/repo'");
+      throw new ConvexError("Invalid fullName format. Expected 'owner/repo'");
     }
 
     const repo = await ctx.db
@@ -127,12 +127,14 @@ export const create = mutation({
       .unique();
 
     if (!repo) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     // Check if user has access to the repository
     if (repo.isPrivate && repo.ownerId !== user._id) {
-      throw new Error("Not authorized to create issues in this repository");
+      throw new ConvexError(
+        "Not authorized to create issues in this repository"
+      );
     }
 
     // Get the next issue number for this repository
@@ -171,23 +173,23 @@ export const update = mutation({
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
 
     if (!user) {
-      throw new Error("Not authenticated");
+      throw new ConvexError("Not authenticated");
     }
 
     const issue = await ctx.db.get(args.id);
     if (!issue) {
-      throw new Error("Issue not found");
+      throw new ConvexError("Issue not found");
     }
 
     // Get the repository to check permissions
     const repo = await ctx.db.get(issue.repositoryId);
     if (!repo) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     // Check if user has permission to update
     if (repo.ownerId !== user._id) {
-      throw new Error("Not authorized to update this issue");
+      throw new ConvexError("Not authorized to update this issue");
     }
 
     // Build update object with only provided fields
@@ -222,23 +224,23 @@ export const deleteIssue = mutation({
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
 
     if (!user) {
-      throw new Error("Not authenticated");
+      throw new ConvexError("Not authenticated");
     }
 
     const issue = await ctx.db.get(args.id);
     if (!issue) {
-      throw new Error("Issue not found");
+      throw new ConvexError("Issue not found");
     }
 
     // Get the repository to check permissions
     const repo = await ctx.db.get(issue.repositoryId);
     if (!repo) {
-      throw new Error("Repository not found");
+      throw new ConvexError("Repository not found");
     }
 
     // Check if user is the owner
     if (repo.ownerId !== user._id) {
-      throw new Error("Not authorized to delete this issue");
+      throw new ConvexError("Not authorized to delete this issue");
     }
 
     // Delete associated comments

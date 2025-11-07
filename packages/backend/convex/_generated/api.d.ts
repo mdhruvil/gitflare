@@ -11,7 +11,10 @@
 import type * as auth from "../auth.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
+import type * as issues from "../issues.js";
 import type * as privateData from "../privateData.js";
+import type * as pulls from "../pulls.js";
+import type * as repositories from "../repositories.js";
 import type * as todos from "../todos.js";
 
 import type {
@@ -32,7 +35,10 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   healthCheck: typeof healthCheck;
   http: typeof http;
+  issues: typeof issues;
   privateData: typeof privateData;
+  pulls: typeof pulls;
+  repositories: typeof repositories;
   todos: typeof todos;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

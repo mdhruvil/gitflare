@@ -32,12 +32,12 @@ export class Repo extends DurableObject<Env> {
     super(ctx, env);
 
     this.dofs = new Fs(ctx, env, { chunkSize: 512 * 1024 }); // 512KB chunks
-    this.dofs.setDeviceSize(5 * 1024 * 1024 * 1024); // 5GB device size to support large repos
 
     this.isoGitFs = new IsoGitFs(this.dofs).getPromiseFsClient();
     this.git = new GitService(this.isoGitFs, "/repo");
 
     this.ctx.blockConcurrencyWhile(async () => {
+      this.dofs.setDeviceSize(5 * 1024 * 1024 * 1024); // 5GB device size to support large repos
       await this.ensureRepoInitialized();
     });
   }
