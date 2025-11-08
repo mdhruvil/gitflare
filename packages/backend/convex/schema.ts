@@ -56,6 +56,7 @@ export default defineSchema({
 
   comments: defineTable({
     authorId: v.string(),
+    authorUsername: v.string(),
     body: v.string(),
     issueId: v.optional(v.id("issues")),
     prId: v.optional(v.id("pullRequests")),

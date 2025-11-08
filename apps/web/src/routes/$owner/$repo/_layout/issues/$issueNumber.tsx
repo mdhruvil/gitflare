@@ -1,17 +1,40 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@gitvex/backend/convex/_generated/api";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import type { Id } from "@gitvex/backend/convex/_generated/dataModel";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { fetchMutation } from "@/lib/auth-server";
+import { handleAndThrowConvexError } from "@/lib/convex";
 import { cn } from "@/lib/utils";
 
 const getIssueQueryOptions = (owner: string, repo: string, number: number) =>
   convexQuery(api.issues.getByRepoAndNumber, {
     fullName: `${owner}/${repo}`,
     number,
+  });
+
+const addCommentSchema = z.object({
+  issueId: z.custom<Id<"issues">>(),
+  body: z.string().min(1, "Comment cannot be empty"),
+});
+
+const addCommentServerFn = createServerFn({ method: "POST" })
+  .inputValidator(addCommentSchema)
+  .handler(async ({ data }) => {
+    const commentId = await fetchMutation(api.comments.addComment, {
+      issueId: data.issueId,
+      body: data.body,
+    }).catch(handleAndThrowConvexError);
+
+    return commentId;
   });
 
 export const Route = createFileRoute(
@@ -34,6 +57,39 @@ function RouteComponent() {
   const { data: issue } = useSuspenseQuery(
     getIssueQueryOptions(params.owner, params.repo, Number(params.issueNumber))
   );
+  const [commentBody, setCommentBody] = useState("");
+
+  const addCommentMutation = useMutation({
+    mutationFn: async (body: string) =>
+      await addCommentServerFn({
+        data: {
+          issueId: issue._id,
+          body,
+        },
+      }),
+    onSuccess: () => {
+      setCommentBody("");
+    },
+    onError: (err) => {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to add comment";
+      toast.error(errorMessage);
+    },
+  });
+
+  const handleSubmitComment = () => {
+    if (!commentBody.trim()) {
+      return;
+    }
+
+    addCommentMutation.mutate(commentBody);
+  };
+
+  const handleCancel = () => {
+    setCommentBody("");
+  };
+
+  const isSubmitting = addCommentMutation.isPending;
 
   const statusLabel = issue.status === "open" ? "Open" : "Closed";
 
@@ -63,21 +119,54 @@ function RouteComponent() {
         />
 
         {/* Comments Section */}
-        <h3 className="font-semibold text-sm">Comments</h3>
-        <div className="flex items-center justify-center rounded-lg border border-dashed py-8">
-          <p className="text-muted-foreground text-sm">TODO</p>
-        </div>
+        <h3 className="font-semibold text-sm">
+          Comments ({issue.comments.length})
+        </h3>
+        {issue.comments.length > 0 ? (
+          <div className="space-y-4">
+            {issue.comments.map((comment) => (
+              <Comment
+                _creationTime={comment._creationTime}
+                content={comment.body}
+                creatorUsername={comment.authorUsername}
+                key={comment._id}
+                type="comment"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center rounded-lg border border-dashed py-8">
+            <p className="text-muted-foreground text-sm">
+              No comments yet. Be the first to comment!
+            </p>
+          </div>
+        )}
 
         {/* Add Comment */}
         <div className="space-y-3">
           <Textarea
             className="resize-none"
+            disabled={isSubmitting}
+            onChange={(e) => setCommentBody(e.target.value)}
             placeholder="Add a comment..."
             rows={4}
+            value={commentBody}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="outline">Cancel</Button>
-            <Button type="button">Comment</Button>
+            <Button
+              disabled={isSubmitting || !commentBody.trim()}
+              onClick={handleCancel}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              loading={isSubmitting}
+              onClick={handleSubmitComment}
+              type="button"
+            >
+              Comment
+            </Button>
           </div>
         </div>
       </div>

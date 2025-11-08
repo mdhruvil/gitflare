@@ -61,6 +61,29 @@ export const getByRepoAndNumber = query({
     fullName: v.string(),
     number: v.number(),
   },
+  returns: v.object({
+    _id: v.id("issues"),
+    _creationTime: v.number(),
+    repositoryId: v.id("repositories"),
+    fullName: v.string(),
+    number: v.number(),
+    title: v.string(),
+    body: v.optional(v.string()),
+    status: v.union(v.literal("open"), v.literal("closed")),
+    creatorId: v.string(),
+    creatorUsername: v.string(),
+    comments: v.array(
+      v.object({
+        _id: v.id("comments"),
+        _creationTime: v.number(),
+        authorId: v.string(),
+        authorUsername: v.string(),
+        body: v.string(),
+        issueId: v.optional(v.id("issues")),
+        prId: v.optional(v.id("pullRequests")),
+      })
+    ),
+  }),
   handler: async (ctx, args) => {
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
 
@@ -95,7 +118,17 @@ export const getByRepoAndNumber = query({
       throw new ConvexError("Issue not found");
     }
 
-    return issue;
+    // Fetch all comments for this issue
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+      .order("asc")
+      .collect();
+
+    return {
+      ...issue,
+      comments,
+    };
   },
 });
 
