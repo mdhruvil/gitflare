@@ -1,21 +1,15 @@
 import { api } from "@gitvex/backend/convex/_generated/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { AlertCircleIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -114,10 +108,6 @@ function RouteComponent() {
       <Card className="mx-auto max-w-3xl bg-background">
         <CardHeader>
           <CardTitle>Create a new issue</CardTitle>
-          <CardDescription>
-            Report a bug, request a feature, or start a discussion about{" "}
-            {fullName}
-          </CardDescription>
         </CardHeader>
         <CardContent>
           {createIssueMutation.error && (
@@ -137,10 +127,10 @@ function RouteComponent() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>Add a title</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Brief description of the issue"
+                        placeholder="Title"
                         {...field}
                         disabled={isSubmitting}
                       />
@@ -155,11 +145,11 @@ function RouteComponent() {
                 name="body"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description (optional)</FormLabel>
+                    <FormLabel>Add a description (optional)</FormLabel>
                     <FormControl>
                       <Textarea
                         className="min-h-[200px] resize-y"
-                        placeholder="Provide more details about the issue..."
+                        placeholder="Type your description here..."
                         {...field}
                         disabled={isSubmitting}
                       />
@@ -170,24 +160,15 @@ function RouteComponent() {
               />
 
               <div className="flex justify-end gap-2">
-                <Button
-                  disabled={isSubmitting}
-                  onClick={() => {
-                    navigate({
-                      to: "/$owner/$repo/issues",
-                      params: {
-                        owner: params.owner,
-                        repo: params.repo,
-                      },
-                    });
-                  }}
-                  type="button"
-                  variant="outline"
+                <Link
+                  className={buttonVariants({ variant: "outline" })}
+                  params={params}
+                  to="/$owner/$repo/issues"
                 >
                   Cancel
-                </Button>
+                </Link>
                 <Button loading={isSubmitting} type="submit">
-                  Create issue
+                  Create
                 </Button>
               </div>
             </form>
