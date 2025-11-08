@@ -119,6 +119,10 @@ export const create = mutation({
       throw new ConvexError("Not authenticated");
     }
 
+    if (!user.username) {
+      throw new ConvexError("Username is required");
+    }
+
     // Get the repository
     const [owner, name] = args.fullName.split("/");
     if (!owner || !name) {
@@ -159,6 +163,8 @@ export const create = mutation({
       status: "open",
       intoBranch: args.intoBranch,
       fromBranch: args.fromBranch,
+      creatorId: user._id,
+      creatorUsername: user.username,
     });
 
     return newPrId;
@@ -191,14 +197,8 @@ export const update = mutation({
       throw new ConvexError("Pull request not found");
     }
 
-    // Get the repository to check permissions
-    const repo = await ctx.db.get(pr.repositoryId);
-    if (!repo) {
-      throw new ConvexError("Repository not found");
-    }
-
-    // Check if user has permission to update
-    if (repo.ownerId !== user._id) {
+    // Check if user is the creator of the pull request
+    if (pr.creatorId !== user._id) {
       throw new ConvexError("Not authorized to update this pull request");
     }
 
@@ -250,14 +250,8 @@ export const deletePullRequest = mutation({
       throw new ConvexError("Pull request not found");
     }
 
-    // Get the repository to check permissions
-    const repo = await ctx.db.get(pr.repositoryId);
-    if (!repo) {
-      throw new ConvexError("Repository not found");
-    }
-
-    // Check if user is the owner
-    if (repo.ownerId !== user._id) {
+    // Check if user is the creator of the pull request
+    if (pr.creatorId !== user._id) {
       throw new ConvexError("Not authorized to delete this pull request");
     }
 

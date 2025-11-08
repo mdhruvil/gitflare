@@ -25,6 +25,8 @@ export default defineSchema({
     title: v.string(),
     body: v.optional(v.string()),
     status: v.union(v.literal("open"), v.literal("closed")),
+    creatorId: v.string(),
+    creatorUsername: v.string(),
   })
     .index("by_repositoryId", ["repositoryId"])
     .index("by_fullName", ["fullName"])
@@ -44,6 +46,8 @@ export default defineSchema({
     ),
     intoBranch: v.string(),
     fromBranch: v.string(),
+    creatorId: v.string(),
+    creatorUsername: v.string(),
   })
     .index("by_repositoryId", ["repositoryId"])
     .index("by_fullName", ["fullName"])
@@ -51,7 +55,7 @@ export default defineSchema({
     .index("by_fullName_number", ["fullName", "number"]),
 
   comments: defineTable({
-    authorId: v.id("user"),
+    authorId: v.string(),
     body: v.string(),
     issueId: v.optional(v.id("issues")),
     prId: v.optional(v.id("pullRequests")),
