@@ -49,14 +49,45 @@ function RouteComponent() {
     select: (state) => state.pathname,
   });
 
-  const lastPart = pathname.split("/").at(-1);
+  // Map route patterns to tab values
+  const getActiveTab = (path: string): string => {
+    const basePath = `/${owner}/${repo}`;
 
-  const activeTab = lastPart === repo ? "code" : lastPart;
+    // Remove base path to get the relative route
+    const relativePath = path.startsWith(basePath)
+      ? path.slice(basePath.length)
+      : path;
+
+    // Match routes to tabs
+    if (relativePath === "" || relativePath === "/") {
+      return "code";
+    }
+    if (relativePath.startsWith("/tree") || relativePath.startsWith("/blob")) {
+      return "code";
+    }
+    if (relativePath.startsWith("/commits")) {
+      return "commits";
+    }
+    if (relativePath.startsWith("/issues")) {
+      return "issues";
+    }
+    if (relativePath.startsWith("/pulls")) {
+      return "pulls";
+    }
+    if (relativePath.startsWith("/settings")) {
+      return "settings";
+    }
+
+    // Default to code tab
+    return "code";
+  };
+
+  const activeTab = getActiveTab(pathname);
 
   return (
     <div className="my-5">
       <div className="border-b">
-        <nav className="container mx-auto space-y-3">
+        <nav className="mx-auto max-w-5xl space-y-3">
           <div className="flex items-center gap-4">
             <Link className="ml-3" to="/">
               <GitBranchIcon className="size-5" />
@@ -136,7 +167,7 @@ function RouteComponent() {
           </div>
         </nav>
       </div>
-      <section className="my-8">
+      <section className="mx-auto my-8 max-w-5xl">
         <Outlet />
       </section>
     </div>

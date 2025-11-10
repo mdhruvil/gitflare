@@ -367,6 +367,79 @@ export class GitService {
     }
   }
 
+  async resolveRef(ref: string) {
+    try {
+      const oid = await git.resolveRef({
+        fs: this.fs,
+        gitdir: this.gitdir,
+        ref,
+      });
+      return oid;
+    } catch (error) {
+      logger.warn(`(resolve-ref) Failed to resolve ref ${ref}: ${error}`);
+      return null;
+    }
+  }
+
+  async getTree(resolvedRef: string, path = "") {
+    try {
+      const { tree } = await git.readTree({
+        fs: this.fs,
+        gitdir: this.gitdir,
+        oid: resolvedRef,
+        filepath: path,
+        cache: this.cache,
+      });
+
+      return tree;
+    } catch (error) {
+      logger.error(
+        `(get-tree) Failed to get tree for ${resolvedRef}:${path}: ${error}`
+      );
+      return [];
+    }
+  }
+
+  async getBlob(resolvedRef: string, filepath: string) {
+    try {
+      const { blob, oid } = await git.readBlob({
+        fs: this.fs,
+        gitdir: this.gitdir,
+        oid: resolvedRef,
+        filepath,
+        cache: this.cache,
+      });
+      const isBinary = this.detectBinary(blob);
+
+      return {
+        oid,
+        content: blob,
+        size: blob.length,
+        isBinary,
+      };
+    } catch (error) {
+      logger.error(
+        `(get-blob) Failed to get blob for ${resolvedRef}:${filepath}: ${error}`
+      );
+      return null;
+    }
+  }
+
+  getBlobSize(content: Uint8Array): number {
+    return content.length;
+  }
+
+  detectBinary(content: Uint8Array): boolean {
+    // Check first 8000 bytes for null bytes (common binary file indicator)
+    const bytesToCheck = Math.min(8000, content.length);
+    for (let i = 0; i < bytesToCheck; i += 1) {
+      if (content[i] === 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // TODO: simplify this and some docs
   async applyRefUpdates(
     commands: Array<{ oldOid: string; newOid: string; ref: string }>,

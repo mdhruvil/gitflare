@@ -65,13 +65,7 @@ export const create = mutation({
     isPrivate: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity().catch(() => null);
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
-
-    console.log({
-      identity,
-      user,
-    });
 
     if (!user) {
       throw new ConvexError("Not authenticated");
@@ -132,13 +126,7 @@ export const update = mutation({
     isPrivate: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity().catch(() => null);
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
-
-    console.log({
-      identity,
-      user,
-    });
 
     if (!user) {
       throw new ConvexError("Not authenticated");

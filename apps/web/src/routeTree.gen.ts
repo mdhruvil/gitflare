@@ -22,9 +22,11 @@ import { Route as OwnerRepoGitReceivePackRouteImport } from './routes/$owner/$re
 import { Route as OwnerRepoLayoutRouteImport } from './routes/$owner/$repo/_layout'
 import { Route as OwnerRepoLayoutIndexRouteImport } from './routes/$owner/$repo/_layout/index'
 import { Route as OwnerRepoInfoRefsRouteImport } from './routes/$owner/$repo/info/refs'
+import { Route as OwnerRepoLayoutTreeRouteImport } from './routes/$owner/$repo/_layout/tree'
 import { Route as OwnerRepoLayoutSettingsRouteImport } from './routes/$owner/$repo/_layout/settings'
 import { Route as OwnerRepoLayoutPullsRouteImport } from './routes/$owner/$repo/_layout/pulls'
 import { Route as OwnerRepoLayoutCommitsRouteImport } from './routes/$owner/$repo/_layout/commits'
+import { Route as OwnerRepoLayoutBlobRouteImport } from './routes/$owner/$repo/_layout/blob'
 import { Route as OwnerRepoLayoutIssuesIndexRouteImport } from './routes/$owner/$repo/_layout/issues/index'
 import { Route as OwnerRepoLayoutIssuesNewRouteImport } from './routes/$owner/$repo/_layout/issues/new'
 import { Route as OwnerRepoLayoutIssuesIssueNumberRouteImport } from './routes/$owner/$repo/_layout/issues/$issueNumber'
@@ -90,6 +92,11 @@ const OwnerRepoInfoRefsRoute = OwnerRepoInfoRefsRouteImport.update({
   path: '/info/refs',
   getParentRoute: () => OwnerRepoRoute,
 } as any)
+const OwnerRepoLayoutTreeRoute = OwnerRepoLayoutTreeRouteImport.update({
+  id: '/tree',
+  path: '/tree',
+  getParentRoute: () => OwnerRepoLayoutRoute,
+} as any)
 const OwnerRepoLayoutSettingsRoute = OwnerRepoLayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -103,6 +110,11 @@ const OwnerRepoLayoutPullsRoute = OwnerRepoLayoutPullsRouteImport.update({
 const OwnerRepoLayoutCommitsRoute = OwnerRepoLayoutCommitsRouteImport.update({
   id: '/commits',
   path: '/commits',
+  getParentRoute: () => OwnerRepoLayoutRoute,
+} as any)
+const OwnerRepoLayoutBlobRoute = OwnerRepoLayoutBlobRouteImport.update({
+  id: '/blob',
+  path: '/blob',
   getParentRoute: () => OwnerRepoLayoutRoute,
 } as any)
 const OwnerRepoLayoutIssuesIndexRoute =
@@ -134,9 +146,11 @@ export interface FileRoutesByFullPath {
   '/$owner/$repo/git-receive-pack': typeof OwnerRepoGitReceivePackRoute
   '/$owner/$repo/git-upload-pack': typeof OwnerRepoGitUploadPackRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/$owner/$repo/blob': typeof OwnerRepoLayoutBlobRoute
   '/$owner/$repo/commits': typeof OwnerRepoLayoutCommitsRoute
   '/$owner/$repo/pulls': typeof OwnerRepoLayoutPullsRoute
   '/$owner/$repo/settings': typeof OwnerRepoLayoutSettingsRoute
+  '/$owner/$repo/tree': typeof OwnerRepoLayoutTreeRoute
   '/$owner/$repo/info/refs': typeof OwnerRepoInfoRefsRoute
   '/$owner/$repo/': typeof OwnerRepoLayoutIndexRoute
   '/$owner/$repo/issues/$issueNumber': typeof OwnerRepoLayoutIssuesIssueNumberRoute
@@ -153,9 +167,11 @@ export interface FileRoutesByTo {
   '/$owner/$repo/git-receive-pack': typeof OwnerRepoGitReceivePackRoute
   '/$owner/$repo/git-upload-pack': typeof OwnerRepoGitUploadPackRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/$owner/$repo/blob': typeof OwnerRepoLayoutBlobRoute
   '/$owner/$repo/commits': typeof OwnerRepoLayoutCommitsRoute
   '/$owner/$repo/pulls': typeof OwnerRepoLayoutPullsRoute
   '/$owner/$repo/settings': typeof OwnerRepoLayoutSettingsRoute
+  '/$owner/$repo/tree': typeof OwnerRepoLayoutTreeRoute
   '/$owner/$repo/info/refs': typeof OwnerRepoInfoRefsRoute
   '/$owner/$repo/issues/$issueNumber': typeof OwnerRepoLayoutIssuesIssueNumberRoute
   '/$owner/$repo/issues/new': typeof OwnerRepoLayoutIssuesNewRoute
@@ -173,9 +189,11 @@ export interface FileRoutesById {
   '/$owner/$repo/git-receive-pack': typeof OwnerRepoGitReceivePackRoute
   '/$owner/$repo/git-upload-pack': typeof OwnerRepoGitUploadPackRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/$owner/$repo/_layout/blob': typeof OwnerRepoLayoutBlobRoute
   '/$owner/$repo/_layout/commits': typeof OwnerRepoLayoutCommitsRoute
   '/$owner/$repo/_layout/pulls': typeof OwnerRepoLayoutPullsRoute
   '/$owner/$repo/_layout/settings': typeof OwnerRepoLayoutSettingsRoute
+  '/$owner/$repo/_layout/tree': typeof OwnerRepoLayoutTreeRoute
   '/$owner/$repo/info/refs': typeof OwnerRepoInfoRefsRoute
   '/$owner/$repo/_layout/': typeof OwnerRepoLayoutIndexRoute
   '/$owner/$repo/_layout/issues/$issueNumber': typeof OwnerRepoLayoutIssuesIssueNumberRoute
@@ -194,9 +212,11 @@ export interface FileRouteTypes {
     | '/$owner/$repo/git-receive-pack'
     | '/$owner/$repo/git-upload-pack'
     | '/api/auth/$'
+    | '/$owner/$repo/blob'
     | '/$owner/$repo/commits'
     | '/$owner/$repo/pulls'
     | '/$owner/$repo/settings'
+    | '/$owner/$repo/tree'
     | '/$owner/$repo/info/refs'
     | '/$owner/$repo/'
     | '/$owner/$repo/issues/$issueNumber'
@@ -213,9 +233,11 @@ export interface FileRouteTypes {
     | '/$owner/$repo/git-receive-pack'
     | '/$owner/$repo/git-upload-pack'
     | '/api/auth/$'
+    | '/$owner/$repo/blob'
     | '/$owner/$repo/commits'
     | '/$owner/$repo/pulls'
     | '/$owner/$repo/settings'
+    | '/$owner/$repo/tree'
     | '/$owner/$repo/info/refs'
     | '/$owner/$repo/issues/$issueNumber'
     | '/$owner/$repo/issues/new'
@@ -232,9 +254,11 @@ export interface FileRouteTypes {
     | '/$owner/$repo/git-receive-pack'
     | '/$owner/$repo/git-upload-pack'
     | '/api/auth/$'
+    | '/$owner/$repo/_layout/blob'
     | '/$owner/$repo/_layout/commits'
     | '/$owner/$repo/_layout/pulls'
     | '/$owner/$repo/_layout/settings'
+    | '/$owner/$repo/_layout/tree'
     | '/$owner/$repo/info/refs'
     | '/$owner/$repo/_layout/'
     | '/$owner/$repo/_layout/issues/$issueNumber'
@@ -338,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OwnerRepoInfoRefsRouteImport
       parentRoute: typeof OwnerRepoRoute
     }
+    '/$owner/$repo/_layout/tree': {
+      id: '/$owner/$repo/_layout/tree'
+      path: '/tree'
+      fullPath: '/$owner/$repo/tree'
+      preLoaderRoute: typeof OwnerRepoLayoutTreeRouteImport
+      parentRoute: typeof OwnerRepoLayoutRoute
+    }
     '/$owner/$repo/_layout/settings': {
       id: '/$owner/$repo/_layout/settings'
       path: '/settings'
@@ -357,6 +388,13 @@ declare module '@tanstack/react-router' {
       path: '/commits'
       fullPath: '/$owner/$repo/commits'
       preLoaderRoute: typeof OwnerRepoLayoutCommitsRouteImport
+      parentRoute: typeof OwnerRepoLayoutRoute
+    }
+    '/$owner/$repo/_layout/blob': {
+      id: '/$owner/$repo/_layout/blob'
+      path: '/blob'
+      fullPath: '/$owner/$repo/blob'
+      preLoaderRoute: typeof OwnerRepoLayoutBlobRouteImport
       parentRoute: typeof OwnerRepoLayoutRoute
     }
     '/$owner/$repo/_layout/issues/': {
@@ -384,9 +422,11 @@ declare module '@tanstack/react-router' {
 }
 
 interface OwnerRepoLayoutRouteChildren {
+  OwnerRepoLayoutBlobRoute: typeof OwnerRepoLayoutBlobRoute
   OwnerRepoLayoutCommitsRoute: typeof OwnerRepoLayoutCommitsRoute
   OwnerRepoLayoutPullsRoute: typeof OwnerRepoLayoutPullsRoute
   OwnerRepoLayoutSettingsRoute: typeof OwnerRepoLayoutSettingsRoute
+  OwnerRepoLayoutTreeRoute: typeof OwnerRepoLayoutTreeRoute
   OwnerRepoLayoutIndexRoute: typeof OwnerRepoLayoutIndexRoute
   OwnerRepoLayoutIssuesIssueNumberRoute: typeof OwnerRepoLayoutIssuesIssueNumberRoute
   OwnerRepoLayoutIssuesNewRoute: typeof OwnerRepoLayoutIssuesNewRoute
@@ -394,9 +434,11 @@ interface OwnerRepoLayoutRouteChildren {
 }
 
 const OwnerRepoLayoutRouteChildren: OwnerRepoLayoutRouteChildren = {
+  OwnerRepoLayoutBlobRoute: OwnerRepoLayoutBlobRoute,
   OwnerRepoLayoutCommitsRoute: OwnerRepoLayoutCommitsRoute,
   OwnerRepoLayoutPullsRoute: OwnerRepoLayoutPullsRoute,
   OwnerRepoLayoutSettingsRoute: OwnerRepoLayoutSettingsRoute,
+  OwnerRepoLayoutTreeRoute: OwnerRepoLayoutTreeRoute,
   OwnerRepoLayoutIndexRoute: OwnerRepoLayoutIndexRoute,
   OwnerRepoLayoutIssuesIssueNumberRoute: OwnerRepoLayoutIssuesIssueNumberRoute,
   OwnerRepoLayoutIssuesNewRoute: OwnerRepoLayoutIssuesNewRoute,

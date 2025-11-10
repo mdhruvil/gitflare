@@ -246,6 +246,45 @@ class RepoBase extends DurableObject<Env> {
     const branches = await this.git.listBranches();
     return branches;
   }
+
+  async getTree(args: { ref: string; path?: string }) {
+    const { ref, path } = args;
+
+    const resolvedRef = await this.git.resolveRef(ref);
+    if (!resolvedRef) {
+      return [];
+    }
+
+    const tree = await this.git.getTree(resolvedRef, path);
+
+    const treeWithLastCommit = await Promise.all(
+      tree.map(async (item) => {
+        const lastCommit = await this.git.getLog({
+          ref,
+          depth: 1,
+          filepath: path ? `${path}/${item.path}` : item.path,
+        });
+        return { ...item, lastCommit: lastCommit[0] || null };
+      })
+    );
+    logger.debug(`get-tree, ref:${resolvedRef}, path:${path}`);
+
+    return treeWithLastCommit;
+  }
+
+  async getBlob(args: { ref: string; filepath: string }) {
+    const { ref, filepath } = args;
+
+    const resolvedRef = await this.git.resolveRef(ref);
+    if (!resolvedRef) {
+      return null;
+    }
+
+    logger.debug(`get-blob, ref:${resolvedRef}, filepath:${filepath}`);
+    const blob = await this.git.getBlob(resolvedRef, filepath);
+    console.log(blob);
+    return blob;
+  }
 }
 
 // Export your named class as defined in your wrangler config

@@ -13,13 +13,7 @@ export const getByRepo = query({
     ),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity().catch(() => null);
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
-
-    console.log({
-      identity,
-      user,
-    });
 
     // Get the repository to check privacy
     const [owner, name] = args.fullName.split("/");

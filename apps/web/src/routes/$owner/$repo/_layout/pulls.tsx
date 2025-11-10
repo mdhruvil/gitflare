@@ -5,5 +5,9 @@ export const Route = createFileRoute("/$owner/$repo/_layout/pulls")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/$owner/$repo/_layout/pulls"!</div>;
+  return (
+    <div className="text-center text-xl">
+      TODO - Maybe I can't even implement this on time.
+    </div>
+  );
 }

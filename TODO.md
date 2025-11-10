@@ -2,9 +2,8 @@
 
 ## Phase 1: Core Git Functionality
 
-- [ ] **Repository View:** Display repository contents, including files and directories.
 - [x] **Repository Creation:** Allow users to create new repositories.
-- [ ] **Commit History:** Show the commit history for a repository.
+- [x] **Commit History:** Show the commit history for a repository.
 - [x] **Git Push/Pull:** Implement the core functionality for pushing and pulling git repositories. This will involve handling git's smart protocol over HTTP.
 - [ ] **Repository Viewer**: Build a web interface to view repositories, including file browsing and commit history.
 
@@ -15,7 +14,7 @@
 
 ## Phase 3: GitHub Features
 
-- [ ] **Issues:** Implement a full-featured issue tracker.
+- [x] **Issues:** Implement a full-featured issue tracker.
 - [ ] **Pull Requests:** Implement pull requests with code review capabilities.
 
 ## Phase 4: Self-Hosting and Deployment
