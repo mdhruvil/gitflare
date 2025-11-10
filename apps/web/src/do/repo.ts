@@ -280,9 +280,10 @@ class RepoBase extends DurableObject<Env> {
       return null;
     }
 
-    logger.debug(`get-blob, ref:${resolvedRef}, filepath:${filepath}`);
+    logger.debug(
+      `get-blob, ref:${ref}, resolvedRef:${resolvedRef}, filepath:${filepath}`
+    );
     const blob = await this.git.getBlob(resolvedRef, filepath);
-    console.log(blob);
     return blob;
   }
 }

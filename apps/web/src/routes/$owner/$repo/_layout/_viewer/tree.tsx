@@ -1,23 +1,9 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
-import {
-  ChevronRightIcon,
-  FileIcon,
-  FolderIcon,
-  GitBranchIcon,
-} from "lucide-react";
-import { useState } from "react";
+import { FileIcon, FolderIcon } from "lucide-react";
 import { z } from "zod";
-import { getBranchesQueryOptions } from "@/api/branches";
 import { getTreeQueryOptions } from "@/api/tree";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const searchSchema = z.object({
@@ -25,18 +11,20 @@ const searchSchema = z.object({
   path: z.string().optional().default(""),
 });
 
-export const Route = createFileRoute("/$owner/$repo/_layout/tree")({
+export const Route = createFileRoute("/$owner/$repo/_layout/_viewer/tree")({
   component: RouteComponent,
   validateSearch: searchSchema,
-  loader: async ({ params, context: { queryClient } }) => {
-    const ref = "main";
-    const path = "";
+  loaderDeps: ({ search }) => ({
+    ref: search.ref,
+    path: search.path,
+  }),
+  loader: async ({ params, context: { queryClient }, deps }) => {
     await queryClient.ensureQueryData(
       getTreeQueryOptions({
         owner: params.owner,
         repo: params.repo,
-        ref,
-        path,
+        ref: deps.ref,
+        path: deps.path,
       })
     );
   },
@@ -68,13 +56,11 @@ function RouteComponent() {
   const { owner, repo } = params;
   const { ref = "main", path = "" } = search;
 
-  const [selectedBranch, setSelectedBranch] = useState<string>(ref);
-
   const { data: tree } = useSuspenseQuery(
     getTreeQueryOptions({
       owner,
       repo,
-      ref: selectedBranch,
+      ref,
       path,
     })
   );
@@ -92,16 +78,6 @@ function RouteComponent() {
 
   return (
     <div className="py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <Breadcrumb path={path} ref={selectedBranch} repo={repo} />
-        <BranchSelector
-          onBranchChange={setSelectedBranch}
-          owner={owner}
-          repo={repo}
-          selectedBranch={selectedBranch}
-        />
-      </div>
-
       <div className="divide-y overflow-hidden rounded-lg border">
         {sortedTree.map((entry) => {
           const isDirectory = entry.type === "tree";
@@ -113,9 +89,8 @@ function RouteComponent() {
               key={entry.oid}
               params={{ owner, repo }}
               search={{
-                ref: selectedBranch,
-                path: isDirectory ? newPath : undefined,
-                filepath: isDirectory ? undefined : newPath,
+                ref,
+                path: newPath,
               }}
               to={isDirectory ? "/$owner/$repo/tree" : "/$owner/$repo/blob"}
             >
@@ -160,86 +135,6 @@ function RouteComponent() {
         )}
       </div>
     </div>
-  );
-}
-
-function Breadcrumb({
-  repo,
-  ref,
-  path,
-}: {
-  repo: string;
-  ref: string;
-  path: string;
-}) {
-  const pathParts = path ? path.split("/").filter(Boolean) : [];
-
-  return (
-    <div className="flex items-center gap-2 text-sm">
-      <Link
-        className="font-semibold text-foreground hover:underline"
-        search={{ ref }}
-        to="."
-      >
-        {repo}
-      </Link>
-      {pathParts.map((part, index) => {
-        const pathUpToHere = pathParts.slice(0, index + 1).join("/");
-        return (
-          <div className="flex items-center gap-2" key={pathUpToHere}>
-            <ChevronRightIcon className="size-4 text-muted-foreground" />
-            <Link
-              className="text-muted-foreground hover:text-foreground hover:underline"
-              search={{ ref, path: pathUpToHere }}
-              to="."
-            >
-              {part}
-            </Link>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function BranchSelector({
-  owner,
-  repo,
-  selectedBranch,
-  onBranchChange,
-}: {
-  owner: string;
-  repo: string;
-  selectedBranch: string;
-  onBranchChange: (branch: string) => void;
-}) {
-  const { data: branches, isLoading } = useQuery(
-    getBranchesQueryOptions({
-      owner,
-      repo,
-    })
-  );
-
-  if (isLoading) {
-    return <Skeleton className="h-9 w-[180px]" />;
-  }
-
-  return (
-    <Select onValueChange={onBranchChange} value={selectedBranch}>
-      <SelectTrigger className="w-[180px]">
-        <div className="flex items-center gap-2">
-          <GitBranchIcon className="size-4" />
-          <SelectValue />
-        </div>
-      </SelectTrigger>
-      <SelectContent>
-        {branches?.map((branch) => (
-          <SelectItem key={branch} value={branch}>
-            {branch}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   );
 }
 

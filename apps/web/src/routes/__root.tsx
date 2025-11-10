@@ -1,6 +1,8 @@
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { getCookieName } from "@convex-dev/better-auth/react-start";
 import type { ConvexQueryClient } from "@convex-dev/react-query";
+import interWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import interUrl from "@fontsource-variable/inter/index.css?url";
 import type { QueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
@@ -52,6 +54,17 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "stylesheet",
+        href: interUrl,
+      },
+      {
+        rel: "preload",
+        as: "font",
+        href: interWoff2,
+        type: "font/woff2",
+        crossOrigin: "anonymous",
       },
       {
         rel: "icon",
