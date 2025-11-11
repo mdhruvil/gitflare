@@ -12,17 +12,19 @@ import {
   Outlet,
   Scripts,
   useRouteContext,
+  useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
 import type { ConvexReactClient } from "convex/react";
 import { ConvexError } from "convex/values";
-import { AlertCircleIcon } from "lucide-react";
+import { AlertCircleIcon, LoaderIcon } from "lucide-react";
 import { getSessionOptions } from "@/api/session";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Toaster } from "@/components/ui/sonner";
 import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 import appCss from "../index.css?url";
 
 export type RouterAppContext = {
@@ -110,6 +112,10 @@ function ErrorComponent({ error }: ErrorComponentProps) {
 
 function RootDocument() {
   const context = useRouteContext({ from: Route.id });
+  const isLoading = useRouterState({
+    select: (s) => s.status === "pending",
+  });
+
   return (
     <ConvexBetterAuthProvider
       authClient={authClient}
@@ -120,6 +126,28 @@ function RootDocument() {
           <HeadContent />
         </head>
         <body>
+          <div
+            className={cn(
+              "-translate-y-full pointer-events-none fixed top-0 left-0 z-30 h-[300px] w-full opacity-0 backdrop-blur-md transition-all delay-0 duration-300 dark:h-[200px] dark:rounded-[100%] dark:bg-white/10!",
+              isLoading && "-translate-y-[50%] opacity-100 delay-200"
+            )}
+            style={{
+              background:
+                "radial-gradient(closest-side, rgba(0,10,40,0.2) 0%, rgba(0,0,0,0) 100%)",
+              maskImage:
+                "radial-gradient(ellipse 70% 75% at 50% 40%, black 60%, transparent 80%)",
+              WebkitMaskImage:
+                "radial-gradient(ellipse 70% 75% at 50% 40%, black 60%, transparent 80%)",
+            }}
+          >
+            <div
+              className={
+                "-translate-x-1/2 absolute top-1/2 left-1/2 z-50 translate-y-[30px] rounded-lg bg-white/80 p-2 shadow-lg dark:bg-gray-700"
+              }
+            >
+              <LoaderIcon className="animate-spin text-3xl" />
+            </div>
+          </div>
           <Outlet />
           <Toaster richColors />
           <TanStackRouterDevtools position="bottom-left" />
