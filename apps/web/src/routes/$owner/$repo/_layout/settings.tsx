@@ -110,7 +110,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className="container mx-auto max-w-3xl px-5 py-8 md:px-0">
+    <div>
       <div className="space-y-6">
         <div>
           <h1 className="font-bold text-2xl tracking-tight">

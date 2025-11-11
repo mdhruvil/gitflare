@@ -1,3 +1,5 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "@gitvex/backend/convex/_generated/api";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
@@ -71,9 +73,22 @@ function RouteComponent() {
     })
   );
 
+  const { data: repository } = useSuspenseQuery(
+    convexQuery(api.repositories.getByOwnerAndName, {
+      owner,
+      name: repo,
+    })
+  );
+
   // If tree is empty, show instructions
   if (tree.length === 0) {
-    return <EmptyRepositoryInstructions owner={owner} repo={repo} />;
+    return (
+      <EmptyRepositoryInstructions
+        isPrivate={repository.isPrivate}
+        owner={owner}
+        repo={repo}
+      />
+    );
   }
 
   // Sort tree: directories first, then files
@@ -94,7 +109,10 @@ function RouteComponent() {
   );
 
   return (
-    <div className="space-y-6 py-6">
+    <div className="space-y-6">
+      {repository.description && (
+        <p className="text-muted-foreground">{repository.description}</p>
+      )}
       <div className="divide-y overflow-hidden rounded-lg border">
         {sortedTree.map((entry) => {
           const isDirectory = entry.type === "tree";
@@ -213,9 +231,11 @@ function ReadmeViewer({
 function EmptyRepositoryInstructions({
   owner,
   repo,
+  isPrivate,
 }: {
   owner: string;
   repo: string;
+  isPrivate: boolean;
 }) {
   const data = Route.useLoaderData();
   const url = new URL(data.url);
@@ -223,7 +243,7 @@ function EmptyRepositoryInstructions({
   const repoUrl = `${url.origin ?? window.location.origin}/${owner}/${repo}.git`;
 
   return (
-    <div className="py-12">
+    <div>
       <div className="mx-auto space-y-6">
         <div className="text-center">
           <h2 className="font-bold text-xl">This repository is empty.</h2>
@@ -231,6 +251,34 @@ function EmptyRepositoryInstructions({
             Get started by pushing an existing repository or creating a new one.
           </p>
         </div>
+
+        <Card>
+          <CardContent className="text-sm">
+            <CardTitle className="mb-3">Note</CardTitle>
+            <div className="leading-relaxed">
+              {isPrivate ? (
+                <p>
+                  This is a <strong>private repository</strong>. You'll need a
+                  Personal Access Token (PAT) to clone and push changes.
+                </p>
+              ) : (
+                <p>
+                  To push changes to this repository, you'll need a Personal
+                  Access Token (PAT).
+                </p>
+              )}{" "}
+              <p>
+                Create one in{" "}
+                <Link
+                  className="font-medium underline underline-offset-4"
+                  to="/settings"
+                >
+                  Settings &gt; Personal Access Tokens
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

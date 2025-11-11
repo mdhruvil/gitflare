@@ -1,70 +1,192 @@
-# gitvex
+# Gitvex
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Convex, and more.
+A self-hosted GitHub alternative built to run on serverless platform like Cloudflare Workers.
 
 ## Features
 
-- **TypeScript** - For type safety and improved developer experience
-- **TanStack Start** - SSR framework with TanStack Router
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **shadcn/ui** - Reusable UI components
-- **Convex** - Reactive backend-as-a-service platform
-- **Authentication** - Better-Auth
-- **Biome** - Linting and formatting
-- **Turborepo** - Optimized monorepo build system
+- **Git Repository Hosting** - Host Git repositories with full Git protocol support
+- **Serverless Architecture** - Deploy on Cloudflare Workers with Durable Objects for SQLite-backed storage
+- **Issues & Pull Requests(soon)** - Track bugs, features, and manage code reviews
+- **Real-time Collaboration** - Built on Convex for reactive, real-time updates
+- **Modern Stack** - React 19, TanStack Router, TailwindCSS, and TypeScript
+- **Authentication** - Better Auth integration with Convex adapter
 
-## Getting Started
+## Tech Stack
 
-First, install the dependencies:
-
-```bash
-pnpm install
-```
-
-## Convex Setup
-
-This project uses Convex as a backend. You'll need to set up Convex before running the app:
-
-```bash
-pnpm run dev:setup
-```
-
-Follow the prompts to create a new Convex project and connect it to your application.
-
-Then, run the development server:
-
-```bash
-pnpm run dev
-```
-
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-Your app will connect to the Convex cloud backend automatically.
-
-
-
-
-
-
-
-## Deployment (Cloudflare Wrangler)
-- Web deploy: cd apps/web && pnpm run deploy
-
+- **Frontend**: React 19, TanStack Start, TanStack Router, TanStack Query, Vite, TailwindCSS
+- **Backend**: Convex
+- **Hosting**: Cloudflare Workers
+- **Storage**: Cloudflare Durable Objects (SQLite-backed) for Git repositories
+- **Authentication**: Better Auth with Convex integration
 
 ## Project Structure
 
 ```
 gitvex/
 ├── apps/
-│   ├── web/         # Frontend application (React + TanStack Start)
+│   └── web/                    # Frontend application (React + TanStack Start)
+│       ├── src/
+│       │   ├── api/           # API client utilities
+│       │   ├── components/    # React components (UI and app-specific)
+│       │   ├── do/            # Durable Object implementations (cache, fs, logger, repo)
+│       │   ├── git/           # Git protocol implementation (pkt, protocol, service)
+│       │   ├── lib/           # Shared utilities (auth, convex client, git-auth, utils)
+│       │   └── routes/        # TanStack Router routes
+│       ├── public/            # Static assets
+│       └── wrangler.jsonc     # Cloudflare Workers configuration
 ├── packages/
-│   ├── backend/     # Convex backend functions and schema
+│   └── backend/               # Convex backend
+│       └── convex/            # Convex functions and schema
+│           ├── betterAuth/    # Better Auth integration
+│           ├── auth.ts        # Authentication functions
+│           ├── comments.ts    # Comment management
+│           ├── issues.ts      # Issue tracking
+│           ├── pulls.ts       # Pull request management
+│           ├── repositories.ts # Repository management
+│           ├── todos.ts       # Todo functionality
+│           ├── http.ts        # HTTP endpoints
+│           └── schema.ts      # Database schema
+├── biome.json                 # Biome configuration
+├── turbo.json                 # Turborepo configuration
+├── pnpm-workspace.yaml        # pnpm workspace configuration
+└── package.json               # Root package configuration
 ```
 
-## Available Scripts
+## Prerequisites
 
-- `pnpm run dev`: Start all applications in development mode
-- `pnpm run build`: Build all applications
-- `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:setup`: Setup and configure your Convex project
-- `pnpm run check-types`: Check TypeScript types across all apps
-- `pnpm run check`: Run Biome formatting and linting
+- **Node.js**: v18 or higher
+- **pnpm**: v10.19.0 or higher (this project uses pnpm workspaces)
+- **Cloudflare Account**: Required for deployment (free tier available)
+- **Convex Account**: Required for backend (free tier available)
+
+## Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/mdhruvil/gitvex.git
+cd gitvex
+```
+
+### 2. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 3. Set Up Convex Backend
+
+This project uses Convex as its backend. You need to set up Convex before running the app:
+
+```bash
+cd packages/backend
+pnpm dev:setup
+```
+
+This command will:
+
+- Create a new Convex project (or link to an existing one)
+- Configure your Convex backend
+- Generate the necessary environment variables
+
+Follow the prompts to authenticate and create your Convex project.
+
+### 4. Configure Environment Variables
+
+Copy the environment file generated by Convex in the web app:
+
+```bash
+cp packages/backend/.env.local apps/web/.env
+```
+
+Edit `.env` and rename the `CONVEX_URL` variable to `VITE_CONVEX_URL`:
+
+```env
+VITE_CONVEX_URL=https://your-project.convex.cloud
+```
+
+Set Convex environment variables
+
+```bash
+npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+npx convex env set SITE_URL http://localhost:3000
+```
+
+### 5. Start Development Servers
+
+From the root directory:
+
+```bash
+pnpm dev
+```
+
+### 6. Access the Application
+
+Open your browser and navigate to:
+
+[http://localhost:3000](http://localhost:3000)
+
+## Development
+
+### Available Scripts
+
+**Root Level:**
+
+- `pnpm dev` - Start all applications in development mode (Turborepo)
+- `pnpm build` - Build all applications
+- `pnpm check` - Run Biome linting and formatting checks
+- `pnpm check:fix` - Run Biome and auto-fix issues (run this after making code changes)
+
+**Web App (apps/web):**
+
+- `pnpm dev` - Start the web development server (Vite)
+- `pnpm build` - Build the web application
+- `pnpm serve` - Preview production build locally
+- `pnpm deploy` - Deploy to Cloudflare Workers
+- `pnpm cf-typegen` - Generate TypeScript types for Cloudflare Workers
+
+**Backend (packages/backend):**
+
+- `pnpm dev` - Start Convex backend in development mode
+- `pnpm dev:setup` - Set up and configure Convex project
+
+## Architecture
+
+### Frontend (apps/web)
+
+- **TanStack Start**: SSR framework with file-based routing
+- **TanStack Router**: Type-safe routing with route protection
+- **TanStack Query**: Data fetching and caching with Convex integration
+- **Cloudflare Workers**: Serverless hosting with edge computing
+- **Durable Objects**: Stateful Git repository storage with SQLite
+
+### Backend (packages/backend)
+
+- **Convex**: Reactive backend with real-time subscriptions
+- **Better Auth**: Authentication with Convex adapter
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Make your changes and run `pnpm check:fix`
+4. Commit your changes: `git commit -m 'Add my feature'`
+5. Push to the branch: `git push origin feature/my-feature`
+6. Submit a pull request
+
+## License
+
+MIT
+
+## Acknowledgments
+
+This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack combining React, TanStack Start, Convex, and more.
+
+## Support
+
+For issues and questions:
+
+- Open an issue on GitHub
+- Check the [Convex documentation](https://docs.convex.dev/)
+- Check the [TanStack documentation](https://tanstack.com/)
+- Check the [Cloudflare Workers documentation](https://developers.cloudflare.com/workers/)

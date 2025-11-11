@@ -40,7 +40,7 @@ export const Route = createFileRoute("/$owner/$repo/_layout/commits")({
 
 function CommitsPendingComponent() {
   return (
-    <div className="py-6">
+    <div>
       {/* Header with title and branch selector skeleton */}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-semibold text-2xl">Commits</h1>
