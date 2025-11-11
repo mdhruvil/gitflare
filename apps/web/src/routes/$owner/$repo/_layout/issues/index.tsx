@@ -5,6 +5,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { handleAndThrowConvexError } from "@/lib/convex";
 
 const getIssuesQueryOptions = (owner: string, repo: string) =>
   convexQuery(api.issues.getByRepo, {
@@ -14,9 +15,9 @@ const getIssuesQueryOptions = (owner: string, repo: string) =>
 export const Route = createFileRoute("/$owner/$repo/_layout/issues/")({
   component: RouteComponent,
   loader: async ({ params, context: { queryClient } }) => {
-    await queryClient.ensureQueryData(
-      getIssuesQueryOptions(params.owner, params.repo)
-    );
+    await queryClient
+      .ensureQueryData(getIssuesQueryOptions(params.owner, params.repo))
+      .catch(handleAndThrowConvexError);
   },
   pendingComponent: PendingComponent,
 });

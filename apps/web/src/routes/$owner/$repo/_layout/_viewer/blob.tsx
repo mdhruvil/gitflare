@@ -11,6 +11,7 @@ import { components } from "@/components/md-components";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Skeleton } from "@/components/ui/skeleton";
+import { handleAndThrowConvexError } from "@/lib/convex";
 import { formatBytes, getMimeType } from "@/lib/utils";
 
 const searchSchema = z.object({
@@ -26,14 +27,16 @@ export const Route = createFileRoute("/$owner/$repo/_layout/_viewer/blob")({
     filepath: search.path,
   }),
   loader: async ({ params, context: { queryClient }, deps }) => {
-    await queryClient.ensureQueryData(
-      getBlobQueryOptions({
-        owner: params.owner,
-        repo: params.repo,
-        ref: deps.ref || "main",
-        filepath: deps.filepath,
-      })
-    );
+    await queryClient
+      .ensureQueryData(
+        getBlobQueryOptions({
+          owner: params.owner,
+          repo: params.repo,
+          ref: deps.ref || "main",
+          filepath: deps.filepath,
+        })
+      )
+      .catch(handleAndThrowConvexError);
   },
   pendingComponent: BlobPendingComponent,
 });

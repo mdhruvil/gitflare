@@ -30,11 +30,14 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
+import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/_layout/settings")({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(getSessionOptions);
+    await queryClient
+      .ensureQueryData(getSessionOptions)
+      .catch(handleAndThrowConvexError);
   },
   pendingComponent: PendingComponent,
 });

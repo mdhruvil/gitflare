@@ -10,15 +10,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/_layout/$owner")({
   component: RouteComponent,
   loader: async ({ params, context: { queryClient } }) => {
-    await queryClient.ensureQueryData(
-      convexQuery(api.repositories.getByOwner, {
-        owner: params.owner,
-      })
-    );
+    await queryClient
+      .ensureQueryData(
+        convexQuery(api.repositories.getByOwner, {
+          owner: params.owner,
+        })
+      )
+      .catch(handleAndThrowConvexError);
   },
 });
 

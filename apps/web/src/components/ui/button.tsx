@@ -52,7 +52,7 @@ function Button({
   return (
     <Comp
       className={cn(buttonVariants({ variant, size, className }), "relative")}
-      disabled={loading || props.disabled}
+      disabled={loading ?? props.disabled}
       {...props}
     >
       <div className={cn("flex items-center gap-2", { "opacity-0": loading })}>

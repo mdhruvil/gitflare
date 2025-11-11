@@ -10,6 +10,7 @@ import { getBlobQueryOptions, getTreeQueryOptions } from "@/api/tree";
 import { components } from "@/components/md-components";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { handleAndThrowConvexError } from "@/lib/convex";
 
 const searchSchema = z.object({
   ref: z.string().optional().default("main"),
@@ -22,14 +23,16 @@ export const Route = createFileRoute("/$owner/$repo/_layout/")({
     ref: search.ref,
   }),
   loader: async ({ params, context: { queryClient }, deps, location }) => {
-    await queryClient.ensureQueryData(
-      getTreeQueryOptions({
-        owner: params.owner,
-        repo: params.repo,
-        ref: deps.ref,
-        path: "",
-      })
-    );
+    await queryClient
+      .ensureQueryData(
+        getTreeQueryOptions({
+          owner: params.owner,
+          repo: params.repo,
+          ref: deps.ref,
+          path: "",
+        })
+      )
+      .catch(handleAndThrowConvexError);
 
     return {
       url: location.url,

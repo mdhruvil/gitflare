@@ -5,6 +5,7 @@ import { FileIcon, FolderIcon } from "lucide-react";
 import { z } from "zod";
 import { getTreeQueryOptions } from "@/api/tree";
 import { Skeleton } from "@/components/ui/skeleton";
+import { handleAndThrowConvexError } from "@/lib/convex";
 
 const searchSchema = z.object({
   ref: z.string().optional().default("main"),
@@ -19,14 +20,16 @@ export const Route = createFileRoute("/$owner/$repo/_layout/_viewer/tree")({
     path: search.path,
   }),
   loader: async ({ params, context: { queryClient }, deps }) => {
-    await queryClient.ensureQueryData(
-      getTreeQueryOptions({
-        owner: params.owner,
-        repo: params.repo,
-        ref: deps.ref,
-        path: deps.path,
-      })
-    );
+    await queryClient
+      .ensureQueryData(
+        getTreeQueryOptions({
+          owner: params.owner,
+          repo: params.repo,
+          ref: deps.ref,
+          path: deps.path,
+        })
+      )
+      .catch(handleAndThrowConvexError);
   },
   pendingComponent: TreePendingComponent,
 });

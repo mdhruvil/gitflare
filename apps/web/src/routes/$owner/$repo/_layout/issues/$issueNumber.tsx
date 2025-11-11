@@ -59,13 +59,15 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
   loader: async ({ params, context: { queryClient } }) => {
-    await queryClient.ensureQueryData(
-      getIssueQueryOptions(
-        params.owner,
-        params.repo,
-        Number(params.issueNumber)
+    await queryClient
+      .ensureQueryData(
+        getIssueQueryOptions(
+          params.owner,
+          params.repo,
+          Number(params.issueNumber)
+        )
       )
-    );
+      .catch(handleAndThrowConvexError);
   },
 });
 

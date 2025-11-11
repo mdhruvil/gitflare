@@ -1,5 +1,6 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@gitvex/backend/convex/_generated/api";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   createFileRoute,
   Link,
@@ -15,6 +16,7 @@ import {
   SettingsIcon,
 } from "lucide-react";
 import { getBranchesQueryOptions } from "@/api/branches";
+import { getSessionOptions } from "@/api/session";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserProfileButton } from "@/components/user-profile-button";
+import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/$owner/$repo/_layout")({
   component: RouteComponent,
@@ -34,12 +37,14 @@ export const Route = createFileRoute("/$owner/$repo/_layout")({
         repo: params.repo,
       })
     );
-    await queryClient.ensureQueryData(
-      convexQuery(api.repositories.getByOwnerAndName, {
-        owner: params.owner,
-        name: params.repo,
-      })
-    );
+    await queryClient
+      .ensureQueryData(
+        convexQuery(api.repositories.getByOwnerAndName, {
+          owner: params.owner,
+          name: params.repo,
+        })
+      )
+      .catch(handleAndThrowConvexError);
   },
 });
 
@@ -49,6 +54,16 @@ function RouteComponent() {
   const pathname = useLocation({
     select: (state) => state.pathname,
   });
+
+  const { data: session } = useSuspenseQuery(getSessionOptions);
+  const { data: repository } = useSuspenseQuery(
+    convexQuery(api.repositories.getByOwnerAndName, {
+      owner,
+      name: repo,
+    })
+  );
+
+  const isOwner = session?.user.id === repository?.ownerId;
 
   // Map route patterns to tab values
   const getActiveTab = (path: string): string => {
@@ -160,12 +175,14 @@ function RouteComponent() {
                     Pull Requests
                   </Link>
                 </TabsTrigger>
-                <TabsTrigger asChild value="settings">
-                  <Link params={params} to="/$owner/$repo/settings">
-                    <SettingsIcon className="opacity-60" />
-                    Settings
-                  </Link>
-                </TabsTrigger>
+                {isOwner && (
+                  <TabsTrigger asChild value="settings">
+                    <Link params={params} to="/$owner/$repo/settings">
+                      <SettingsIcon className="opacity-60" />
+                      Settings
+                    </Link>
+                  </TabsTrigger>
+                )}
               </TabsList>
             </Tabs>
           </div>

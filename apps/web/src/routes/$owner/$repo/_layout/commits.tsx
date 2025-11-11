@@ -19,18 +19,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { handleAndThrowConvexError } from "@/lib/convex";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/$owner/$repo/_layout/commits")({
   component: RouteComponent,
   loader: async ({ params, context: { queryClient } }) => {
-    await queryClient.ensureQueryData(
-      getCommitsQueryOptions({
-        owner: params.owner,
-        repo: params.repo,
-        ref: "main",
-      })
-    );
+    await queryClient
+      .ensureQueryData(
+        getCommitsQueryOptions({
+          owner: params.owner,
+          repo: params.repo,
+          ref: "main",
+        })
+      )
+      .catch(handleAndThrowConvexError);
   },
   pendingComponent: CommitsPendingComponent,
 });
