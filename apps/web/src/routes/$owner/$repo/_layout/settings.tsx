@@ -32,6 +32,7 @@ export const Route = createFileRoute("/$owner/$repo/_layout/settings")({
 });
 
 const formSchema = z.object({
+  description: z.string().optional(),
   isPrivate: z.boolean(),
 });
 
@@ -39,12 +40,14 @@ const updateRepoServerFn = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       repoId: z.string(),
+      description: z.string().optional(),
       isPrivate: z.boolean(),
     })
   )
   .handler(async ({ data }) => {
     const resp = await fetchMutation(api.repositories.update, {
       id: data.repoId as Id<"repositories">,
+      description: data.description,
       isPrivate: data.isPrivate,
     }).catch(handleAndThrowConvexError);
     return resp;
@@ -65,6 +68,7 @@ function RouteComponent() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     values: {
+      description: repository.description || "",
       isPrivate: repository.isPrivate,
     },
   });
@@ -74,17 +78,18 @@ function RouteComponent() {
       await updateRepoServerFn({
         data: {
           repoId: repository._id,
+          description: values.description,
           isPrivate: values.isPrivate,
         },
       }),
     onSuccess: () => {
-      toast.success("Repository visibility updated successfully!");
+      toast.success("Repository settings updated successfully!");
     },
     onError: (err) => {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Failed to update repository visibility";
+          : "Failed to update repository settings";
       toast.error(errorMessage);
     },
   });
@@ -130,23 +135,30 @@ function RouteComponent() {
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Textarea
-              className="resize-none"
-              disabled
-              rows={3}
-              value={repository.description || "No description provided"}
-            />
-            <p className="text-muted-foreground text-sm">
-              Repository description cannot be changed
-            </p>
-          </div>
-
           <Separator />
 
           <Form {...form}>
             <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        className="resize-none"
+                        disabled={isSubmitting}
+                        placeholder="Add a description for your repository"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="isPrivate"
