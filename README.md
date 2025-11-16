@@ -1,64 +1,101 @@
 # Gitvex
 
-A self-hosted GitHub alternative built to run on serverless platform like Cloudflare Workers.
+A self-hosted GitHub alternative built to run on serverless platforms. Built on top of Cloudflare Workers, Durable Objects and Convex.
 
 ## Features
 
-- **Git Repository Hosting** - Host Git repositories with full Git protocol support
-- **Private Repository Support** - Create and manage private repositories
-- **Serverless Architecture** - Deploy on Cloudflare Workers with Durable Objects for SQLite-backed storage
-- **Issues & Pull Requests(soon)** - Track bugs, features, and manage code reviews
-- **Real-time Collaboration** - Built on Convex for reactive, real-time updates
-- **Modern Stack** - React 19, TanStack Router, TailwindCSS, and TypeScript
-- **Authentication** - Better Auth integration with Convex adapter
+- **Serverless Architecture** - No VMs, No Containers, Just Durable Objects and Convex
+- **Unlimited Repositories** - Create unlimited public and private repositories
+- **Issues & Pull Requests(soon)** - Track bugs, features, and manage code reviews. Pull requests coming soon!
+- **On Edge** - Powered by Cloudflare's global network for low latency and high availability
+- **Web Interface** - Easily manage your repositories with a user-friendly web interface
+- **Open Source** - Completely open-source under the MIT License
 
 ## Tech Stack
 
-- **Frontend**: React 19, TanStack Start, TanStack Router, TanStack Query, Vite, TailwindCSS
-- **Backend**: Convex
-- **Hosting**: Cloudflare Workers
-- **Storage**: Cloudflare Durable Objects (SQLite-backed) for Git repositories
-- **Authentication**: Better Auth with Convex integration
+- **[Tanstack Start](https://tanstack.com/start/latest)** - As a framework for building the web interface
+- **[Convex](https://www.convex.dev/)** - To store user data, repository metadata, issues, and other metadata
+- **[Cloudflare Workers](https://developers.cloudflare.com/workers/)** - To handle Git smart HTTP protocol requests and hosting the web interface
+- **[Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/)** - To store and manage Git repository data
+- **[Better Auth](https://www.better-auth.com/)** - For handling authentication and authorization
+
+## How It Works
+
+GitVex reimagines Git hosting with a fully serverless architecture. Here's how the pieces fit together:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          Git Client (You)                           │
+│                     git push / git pull / git clone                 │
+└────────────────────────────────┬────────────────────────────────────┘
+                                 │ HTTPS
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Cloudflare Workers (Edge)                      │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │              TanStack Start Application                       │  │
+│  │                                                               │  │
+│  │  • Authentication & Authorization                             │  │
+│  │  • HTTP Handlers for Git Smart Protocol                       │  │
+│  │    - git-upload-pack (fetch/pull)                             │  │
+│  │    - git-receive-pack (push)                                  │  │
+│  │    - Pkt-line protocol parsing                                │  │
+│  │    - Packfile creation & transfer                             │  │
+│  │  • Web UI                                                     │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+└──────────────────┬────────────────────────────┬─────────────────────┘
+                   │                            │
+                   │ Git Operations             │ Metadata Queries
+                   ▼                            ▼
+┌──────────────────────────────────┐  ┌─────────────────────────────┐
+│   Cloudflare Durable Objects     │  │         Convex              │
+│                                  │  │                             │
+│  ┌────────────────────────────┐  │  │  • User Accounts            │
+│  │  Virtualized File System   │  │  │  • Repository Metadata      │
+│  │    (Built on DO SQLite)    │  │  │  • Issues & Comments        │
+│  │                            │  │  │  • Real-time Subscriptions  │
+│  │  • Git Objects Storage     │  │  └─────────────────────────────┘
+│  │  • Packfile Operations     │  │
+│  └────────────────────────────┘  │
+│                                  │
+│  (One Durable Object per Repo)   │
+└──────────────────────────────────┘
+```
+
+### The Flow
+
+**1. Git Protocol Handling**
+
+When you interact with a GitVex repository using standard Git commands, the request hits **HTTP handlers in the TanStack Start application**. These handlers implement the Git Smart HTTP protocol, translating Git's wire protocol into operations that can be executed against the repository storage. The entire TanStack Start app runs on **Cloudflare Workers**, deployed globally at the edge for minimal latency.
+
+**2. Repository Data Storage**
+
+Git repository data including all objects (blobs, trees, commits, tags), references (branches, tags), and packfiles are stored in **Cloudflare Durable Objects**. Each repository gets its own isolated Durable Object instance with a **virtualized file system built on top of Durable Object SQLite storage**.
+
+**3. Metadata & Coordination**
+
+User data, repository metadata, issues, pull requests, and access control information live in **Convex**. This separation allows the web interface to provide real-time reactive updates, efficient querying, and type-safe operations without impacting Git protocol performance. Convex also integrates with Better Auth to handle authentication seamlessly.
 
 ## Project Structure
 
 ```
 gitvex/
 ├── apps/
-│   └── web/                    # Frontend application (React + TanStack Start)
-│       ├── src/
-│       │   ├── api/           # API client utilities
-│       │   ├── components/    # React components (UI and app-specific)
-│       │   ├── do/            # Durable Object implementations (cache, fs, logger, repo)
-│       │   ├── git/           # Git protocol implementation (pkt, protocol, service)
-│       │   ├── lib/           # Shared utilities (auth, convex client, git-auth, utils)
-│       │   └── routes/        # TanStack Router routes
-│       ├── public/            # Static assets
-│       └── wrangler.jsonc     # Cloudflare Workers configuration
-├── packages/
-│   └── backend/               # Convex backend
-│       └── convex/            # Convex functions and schema
-│           ├── betterAuth/    # Better Auth integration
-│           ├── auth.ts        # Authentication functions
-│           ├── comments.ts    # Comment management
-│           ├── issues.ts      # Issue tracking
-│           ├── pulls.ts       # Pull request management
-│           ├── repositories.ts # Repository management
-│           ├── todos.ts       # Todo functionality
-│           ├── http.ts        # HTTP endpoints
-│           └── schema.ts      # Database schema
-├── biome.json                 # Biome configuration
-├── turbo.json                 # Turborepo configuration
-├── pnpm-workspace.yaml        # pnpm workspace configuration
-└── package.json               # Root package configuration
+│   └── web/                    # TanStack Start app deployed on Cloudflare Workers
+│                               # Contains Git Smart HTTP Protocol handlers, Durable
+│                               # Object implementations, Web UI, and routing
+└── packages/
+    └── backend/
+        └── convex/            # Convex backend with database schema, repository
+                               # metadata, issues, pull requests, Better Auth adapter
 ```
 
 ## Prerequisites
 
-- **Node.js**: v18 or higher
+- **Node.js**: v22 or higher
 - **pnpm**: v10.19.0 or higher (this project uses pnpm workspaces)
-- **Cloudflare Account**: Required for deployment (free tier available)
-- **Convex Account**: Required for backend (free tier available)
+- **Cloudflare Account**: Required for deployment (free tier works)
+- **Convex Account**: Required for backend (free tier works)
 
 ## Getting Started
 
@@ -115,7 +152,7 @@ npx convex env set SITE_URL http://localhost:3000
 
 ### 5. Start Development Servers
 
-From the root directory:
+From the **root** directory:
 
 ```bash
 pnpm dev
@@ -150,21 +187,6 @@ Open your browser and navigate to:
 
 - `pnpm dev` - Start Convex backend in development mode
 - `pnpm dev:setup` - Set up and configure Convex project
-
-## Architecture
-
-### Frontend (apps/web)
-
-- **TanStack Start**: SSR framework with file-based routing
-- **TanStack Router**: Type-safe routing with route protection
-- **TanStack Query**: Data fetching and caching with Convex integration
-- **Cloudflare Workers**: Serverless hosting with edge computing
-- **Durable Objects**: Stateful Git repository storage with SQLite
-
-### Backend (packages/backend)
-
-- **Convex**: Reactive backend with real-time subscriptions
-- **Better Auth**: Authentication with Convex adapter
 
 ## Contributing
 
