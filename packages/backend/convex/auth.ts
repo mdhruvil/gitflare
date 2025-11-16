@@ -40,6 +40,9 @@ function createAuth(
       username(),
       apiKey({
         enableMetadata: true,
+        rateLimit: {
+          enabled: false,
+        },
       }),
     ],
   });
