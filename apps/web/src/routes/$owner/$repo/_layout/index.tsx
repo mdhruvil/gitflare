@@ -3,16 +3,32 @@ import { api } from "@gitvex/backend/convex/_generated/api";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
-import { BookOpenIcon, FileIcon, FolderIcon, TerminalIcon } from "lucide-react";
+import {
+  BookOpenIcon,
+  CheckIcon,
+  CodeIcon,
+  CopyIcon,
+  FileIcon,
+  FolderIcon,
+  TerminalIcon,
+} from "lucide-react";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
+import { toast } from "sonner";
 import { z } from "zod";
 import { getBlobQueryOptions, getTreeQueryOptions } from "@/api/tree";
 import { NotFoundComponent } from "@/components/404-components";
 import { BranchSelector } from "@/components/branch-selector";
 import { components } from "@/components/md-components";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { handleAndThrowConvexError } from "@/lib/convex";
 
@@ -68,6 +84,7 @@ function RouteComponent() {
   const { ref } = search;
 
   const navigate = useNavigate();
+  const data = Route.useLoaderData();
 
   const { data: tree } = useSuspenseQuery(
     getTreeQueryOptions({
@@ -84,6 +101,9 @@ function RouteComponent() {
       name: repo,
     })
   );
+
+  const url = new URL(data.url);
+  const repoUrl = `${url.origin ?? window.location.origin}/${owner}/${repo}.git`;
 
   // If tree is empty, show instructions
   if (tree.length === 0) {
@@ -118,7 +138,7 @@ function RouteComponent() {
       {repository.description && (
         <p className="text-muted-foreground">{repository.description}</p>
       )}
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between gap-4">
         <BranchSelector
           onBranchChange={(newBranch) => {
             navigate({
@@ -130,6 +150,7 @@ function RouteComponent() {
           repo={repo}
           selectedBranch={ref}
         />
+        <CloneButton repoUrl={repoUrl} />
       </div>
       <div className="divide-y overflow-hidden rounded-lg border">
         {sortedTree.map((entry) => {
@@ -187,6 +208,54 @@ function RouteComponent() {
         />
       )}
     </div>
+  );
+}
+
+function CloneButton({ repoUrl }: { repoUrl: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = async () => {
+    await navigator.clipboard.writeText(repoUrl);
+    setCopied(true);
+    toast.success("Repository URL copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline">
+          <CodeIcon className="size-4" />
+          Code
+          <span className="text-[9px]">▼</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-100">
+        <div className="space-y-3">
+          <div>
+            <h4 className="font-semibold text-sm">Clone this repository</h4>
+            <p className="mt-1 text-muted-foreground text-xs">
+              Use Git to clone this repository to your local machine.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <div className="font-medium text-xs">HTTPS</div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 overflow-x-auto rounded-md border bg-muted px-3 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <code className="whitespace-nowrap text-xs">{repoUrl}</code>
+              </div>
+              <Button onClick={copyToClipboard} size="icon" variant="outline">
+                {copied ? (
+                  <CheckIcon className="size-4" />
+                ) : (
+                  <CopyIcon className="size-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
