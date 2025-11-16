@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { FileIcon, FolderIcon } from "lucide-react";
 import { z } from "zod";
 import { getTreeQueryOptions } from "@/api/tree";
+import { NotFoundComponent } from "@/components/404-components";
 import { Skeleton } from "@/components/ui/skeleton";
 import { handleAndThrowConvexError } from "@/lib/convex";
 
@@ -14,6 +15,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/$owner/$repo/_layout/_viewer/tree")({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({
     ref: search.ref,

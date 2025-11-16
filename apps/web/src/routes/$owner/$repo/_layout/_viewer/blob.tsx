@@ -7,6 +7,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { z } from "zod";
 import { getBlobQueryOptions } from "@/api/tree";
+import { NotFoundComponent } from "@/components/404-components";
 import { components } from "@/components/md-components";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -21,6 +22,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/$owner/$repo/_layout/_viewer/blob")({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({
     ref: search.ref,

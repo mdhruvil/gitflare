@@ -6,6 +6,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
+import { NotFoundComponent } from "@/components/404-components";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/todos")({
   component: TodosRoute,
+  notFoundComponent: NotFoundComponent,
 });
 
 function TodosRoute() {

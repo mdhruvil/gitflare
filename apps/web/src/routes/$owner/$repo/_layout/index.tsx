@@ -9,6 +9,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { z } from "zod";
 import { getBlobQueryOptions, getTreeQueryOptions } from "@/api/tree";
+import { NotFoundComponent } from "@/components/404-components";
 import { BranchSelector } from "@/components/branch-selector";
 import { components } from "@/components/md-components";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/$owner/$repo/_layout/")({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({
     ref: search.ref,

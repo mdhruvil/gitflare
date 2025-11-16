@@ -5,6 +5,7 @@ import { CheckIcon, CopyIcon, GitCommitIcon } from "lucide-react";
 import { type MouseEventHandler, useState } from "react";
 import * as z from "zod";
 import { getCommitsQueryOptions } from "@/api/commits";
+import { NotFoundComponent } from "@/components/404-components";
 import { BranchSelector } from "@/components/branch-selector";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +18,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/$owner/$repo/_layout/commits")({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({
     ref: search.ref,

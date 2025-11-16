@@ -3,6 +3,30 @@ import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
 
 /**
+ * Get pull requests created by the authenticated user across all repositories
+ */
+export const getMyPullRequests = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await authComponent.getAuthUser(ctx).catch(() => null);
+
+    if (!user) {
+      return [];
+    }
+
+    const prs = await ctx.db
+      .query("pullRequests")
+      .filter((q) => q.eq(q.field("creatorId"), user._id))
+      .order("desc")
+      .take(args.limit ?? 10);
+
+    return prs;
+  },
+});
+
+/**
  * Get pull requests by repository fullName (owner/repo)
  */
 export const getByRepo = query({

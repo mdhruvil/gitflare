@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { createHighlighter } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
@@ -60,7 +61,7 @@ export const getBlobFn = createServerFn({ method: "GET" })
     });
 
     if (!blob) {
-      return null;
+      throw notFound();
     }
 
     // WE HAVE TO DO THIS BECAUSE OF CACHE SERIALIZATION ISSUES (TODO: REFACTOR)

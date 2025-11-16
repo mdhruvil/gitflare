@@ -7,7 +7,6 @@ import { createAuth } from "@gitvex/backend/convex/auth";
 import type { QueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
-  type ErrorComponentProps,
   HeadContent,
   Outlet,
   Scripts,
@@ -18,11 +17,10 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
 import type { ConvexReactClient } from "convex/react";
-import { ConvexError } from "convex/values";
-import { AlertCircleIcon, LoaderIcon } from "lucide-react";
+import { LoaderIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getSessionOptions } from "@/api/session";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { NotFoundComponent } from "@/components/404-components";
 import { Toaster } from "@/components/ui/sonner";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
@@ -87,29 +85,9 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   loader: async ({ context: { queryClient } }) => {
     queryClient.prefetchQuery(getSessionOptions);
   },
+  notFoundComponent: NotFoundComponent,
   component: RootDocument,
-  errorComponent: ErrorComponent,
 });
-
-function ErrorComponent({ error }: ErrorComponentProps) {
-  let errorMessage = error.message;
-  if (
-    error instanceof ConvexError &&
-    error.data &&
-    typeof error.data === "string"
-  ) {
-    errorMessage = error.data;
-  }
-  return (
-    <div className="p-4">
-      <Alert className="mb-6" variant="destructive">
-        <AlertCircleIcon className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{errorMessage}</AlertDescription>
-      </Alert>
-    </div>
-  );
-}
 
 function RootDocument() {
   const context = useRouteContext({ from: Route.id });
@@ -143,7 +121,7 @@ function RootDocument() {
             <div
               className={cn(
                 "-translate-y-full pointer-events-none fixed top-0 left-0 z-30 h-[300px] w-full opacity-0 backdrop-blur-md transition-all delay-0 duration-300 dark:h-[200px] dark:rounded-[100%] dark:bg-white/10!",
-                isLoading && "-translate-y-[50%] opacity-100 delay-200"
+                isLoading && "-translate-y-[50%] opacity-100 delay-500"
               )}
               style={{
                 background:

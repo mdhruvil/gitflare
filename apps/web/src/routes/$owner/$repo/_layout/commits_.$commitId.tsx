@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { CheckIcon, CopyIcon, FileIcon, GitCommitIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { getCommitQueryOptions } from "@/api/commits";
+import { NotFoundComponent } from "@/components/404-components";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,7 @@ export const Route = createFileRoute(
   "/$owner/$repo/_layout/commits_/$commitId"
 )({
   component: RouteComponent,
-
+  notFoundComponent: NotFoundComponent,
   loader: async ({ params, context: { queryClient } }) => {
     const { owner, repo, commitId } = params;
     await queryClient.ensureQueryData(

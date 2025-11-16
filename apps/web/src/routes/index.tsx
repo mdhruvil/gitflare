@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRightIcon, GitBranchIcon } from "lucide-react";
+import { NotFoundComponent } from "@/components/404-components";
 import { GitHubIcon } from "@/components/github";
 import { buttonVariants } from "@/components/ui/button";
 import { UserProfileButton } from "@/components/user-profile-button";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
+  notFoundComponent: NotFoundComponent,
 });
 
 function HomeComponent() {
@@ -129,24 +131,22 @@ function HomeComponent() {
         </section>
       </div>
 
-      <div className="">
-        <section className="mx-auto items-center max-sm:divide-y sm:flex sm:divide-x">
-          <a
-            className="flex h-30 w-full grow items-center justify-center gap-3 text-lg underline-offset-8 hover:bg-accent hover:underline"
-            href="https://github.com/mdhruvil/gitvex"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Give a Star <GitHubIcon className="size-5" />
-          </a>
-          <Link
-            className="flex h-30 w-full grow items-center justify-center gap-3 text-lg underline-offset-8 hover:bg-accent hover:underline"
-            to="/dashboard"
-          >
-            Get Started <ArrowRightIcon className="size-5" />
-          </Link>
-        </section>
-      </div>
+      <section className="mx-auto items-center max-sm:divide-y sm:flex sm:divide-x">
+        <a
+          className="flex h-30 w-full grow items-center justify-center gap-3 text-lg underline-offset-8 hover:bg-accent hover:underline"
+          href="https://github.com/mdhruvil/gitvex"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Give a Star <GitHubIcon className="size-5" />
+        </a>
+        <Link
+          className="flex h-30 w-full grow items-center justify-center gap-3 text-lg underline-offset-8 hover:bg-accent hover:underline"
+          to="/dashboard"
+        >
+          Get Started <ArrowRightIcon className="size-5" />
+        </Link>
+      </section>
     </main>
   );
 }

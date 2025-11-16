@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import React from "react";
 import * as z from "zod";
+import { NotFoundComponent } from "@/components/404-components";
 import { BranchSelector } from "@/components/branch-selector";
 import {
   Breadcrumb,
@@ -23,6 +24,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/$owner/$repo/_layout/_viewer")({
   component: RouteComponent,
   validateSearch: searchSchema,
+  notFoundComponent: NotFoundComponent,
 });
 
 function RouteComponent() {

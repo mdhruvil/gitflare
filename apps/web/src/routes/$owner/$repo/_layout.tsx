@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { getBranchesQueryOptions } from "@/api/branches";
 import { getSessionOptions } from "@/api/session";
+import { NotFoundComponent } from "@/components/404-components";
+import { ErrorComponent } from "@/components/error-component";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -30,6 +32,8 @@ import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/$owner/$repo/_layout")({
   component: RouteComponent,
+  errorComponent: ErrorComponent,
+  notFoundComponent: NotFoundComponent,
   loader: async ({ params, context: { queryClient } }) => {
     queryClient.prefetchQuery(
       getBranchesQueryOptions({

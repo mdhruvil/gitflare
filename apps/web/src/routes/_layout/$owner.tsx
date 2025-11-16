@@ -3,6 +3,7 @@ import { api } from "@gitvex/backend/convex/_generated/api";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { GitBranchIcon, LockIcon } from "lucide-react";
+import { NotFoundComponent } from "@/components/404-components";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
@@ -14,6 +15,7 @@ import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/_layout/$owner")({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
   loader: async ({ params, context: { queryClient } }) => {
     await queryClient
       .ensureQueryData(

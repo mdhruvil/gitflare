@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { GitBranchIcon } from "lucide-react";
+import { NotFoundComponent } from "@/components/404-components";
 import SignUpForm from "@/components/sign-up-form";
 
 export const Route = createFileRoute("/signup")({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
 });
 
 function RouteComponent() {

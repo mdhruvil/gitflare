@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import z from "zod";
 import { listPersonalAccessTokens } from "@/api/pat";
 import { getSessionOptions } from "@/api/session";
+import { NotFoundComponent } from "@/components/404-components";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,6 +35,7 @@ import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/_layout/settings")({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
   loader: async ({ context: { queryClient } }) => {
     await queryClient
       .ensureQueryData(getSessionOptions)

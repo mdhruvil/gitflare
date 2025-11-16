@@ -9,6 +9,7 @@ import { CircleCheckIcon, CircleDotIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { NotFoundComponent } from "@/components/404-components";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -58,6 +59,7 @@ export const Route = createFileRoute(
   "/$owner/$repo/_layout/issues/$issueNumber"
 )({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
   loader: async ({ params, context: { queryClient } }) => {
     await queryClient
       .ensureQueryData(

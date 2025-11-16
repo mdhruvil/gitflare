@@ -3,6 +3,30 @@ import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
 
 /**
+ * Get issues created by the authenticated user across all repositories
+ */
+export const getMyIssues = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await authComponent.getAuthUser(ctx).catch(() => null);
+
+    if (!user) {
+      return [];
+    }
+
+    const issues = await ctx.db
+      .query("issues")
+      .filter((q) => q.eq(q.field("creatorId"), user._id))
+      .order("desc")
+      .take(args.limit ?? 10);
+
+    return issues;
+  },
+});
+
+/**
  * Get issues by repository fullName (owner/repo)
  */
 export const getByRepo = query({
@@ -25,12 +49,12 @@ export const getByRepo = query({
       .unique();
 
     if (!repo) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     // Check if user has access to the repository
     if (repo.isPrivate && (!user || repo.ownerId !== user._id)) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     // Get issues filtered by status if provided
@@ -100,12 +124,12 @@ export const getByRepoAndNumber = query({
       .unique();
 
     if (!repo) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     // Check if user has access to the repository
     if (repo.isPrivate && (!user || repo.ownerId !== user._id)) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     const issue = await ctx.db
@@ -171,7 +195,7 @@ export const create = mutation({
       .unique();
 
     if (!repo) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     // Check if user has access to the repository
@@ -231,7 +255,7 @@ export const update = mutation({
     // Get the repository to check permissions
     const repo = await ctx.db.get(issue.repositoryId);
     if (!repo) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     // Check if user is the creator of the issue or the repository owner

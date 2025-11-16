@@ -3,6 +3,7 @@ import { api } from "@gitvex/backend/convex/_generated/api";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
+import { NotFoundComponent } from "@/components/404-components";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { handleAndThrowConvexError } from "@/lib/convex";
@@ -14,6 +15,7 @@ const getIssuesQueryOptions = (owner: string, repo: string) =>
 
 export const Route = createFileRoute("/$owner/$repo/_layout/issues/")({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
   loader: async ({ params, context: { queryClient } }) => {
     await queryClient
       .ensureQueryData(getIssuesQueryOptions(params.owner, params.repo))

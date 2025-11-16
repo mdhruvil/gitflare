@@ -12,6 +12,7 @@ import { AlertCircleIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { NotFoundComponent } from "@/components/404-components";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +39,7 @@ import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/_layout/new")({
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
 });
 
 const formSchema = z.object({

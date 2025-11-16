@@ -65,6 +65,9 @@ export function UserProfileButton() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
+                <Link to="/dashboard">Dashboard</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link params={{ owner: user?.username ?? "" }} to="/$owner">
                   Profile
                 </Link>

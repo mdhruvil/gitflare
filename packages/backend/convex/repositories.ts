@@ -1,6 +1,9 @@
+import type { DataModelFromSchemaDefinition } from "convex/server";
 import { ConvexError, v } from "convex/values";
+import { components } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { authComponent, createAuth } from "./auth";
+import type authSchema from "./betterAuth/schema";
 
 /**
  * Get repositories by owner username
@@ -10,7 +13,21 @@ export const getByOwner = query({
     owner: v.string(),
   },
   handler: async (ctx, args) => {
+    type BetterAuthDataModel = DataModelFromSchemaDefinition<typeof authSchema>;
+
     const user = await authComponent.getAuthUser(ctx).catch(() => null);
+
+    const ownerData = (await ctx.runQuery(
+      components.betterAuth.adapter.findOne,
+      {
+        model: "user",
+        where: [{ field: "username", value: args.owner }],
+      }
+    )) as BetterAuthDataModel["user"]["document"] | null;
+
+    if (!ownerData) {
+      throw new ConvexError("NOT_FOUND");
+    }
 
     const repos = await ctx.db
       .query("repositories")
@@ -23,8 +40,6 @@ export const getByOwner = query({
         repos: [],
       };
     }
-
-    const ownerData = await authComponent.getAnyUserById(ctx, repos[0].ownerId);
 
     // Filter out private repositories unless the user is the owner
     return {
@@ -61,12 +76,12 @@ export const getByOwnerAndName = query({
       .unique();
 
     if (!repo) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     // Throw error if repository is private and user is not the owner
     if (repo.isPrivate && (!user || repo.ownerId !== user._id)) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     return repo;
@@ -243,7 +258,7 @@ export const update = mutation({
 
     const repo = await ctx.db.get(args.id);
     if (!repo) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     if (repo.ownerId !== user._id) {
@@ -323,7 +338,7 @@ export const deleteRepository = mutation({
 
     const repo = await ctx.db.get(args.id);
     if (!repo) {
-      throw new ConvexError("Repository not found");
+      throw new ConvexError("NOT_FOUND");
     }
 
     // Check if user is the owner
@@ -369,5 +384,59 @@ export const deleteRepository = mutation({
     await ctx.db.delete(args.id);
 
     return { success: true };
+  },
+});
+
+/**
+ * Get dashboard statistics for the authenticated user
+ */
+export const getMyStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await authComponent.getAuthUser(ctx).catch(() => null);
+
+    if (!user) {
+      return {
+        totalRepos: 0,
+        openIssues: 0,
+        openPRs: 0,
+      };
+    }
+
+    // Get total repositories
+    const repos = await ctx.db
+      .query("repositories")
+      .withIndex("by_ownerId", (q) => q.eq("ownerId", user._id))
+      .collect();
+
+    const totalRepos = repos.length;
+
+    // Count open issues created by user
+    const openIssues = await ctx.db
+      .query("issues")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("creatorId"), user._id),
+          q.eq(q.field("status"), "open")
+        )
+      )
+      .collect();
+
+    // Count open pull requests created by user
+    const openPRs = await ctx.db
+      .query("pullRequests")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("creatorId"), user._id),
+          q.eq(q.field("status"), "open")
+        )
+      )
+      .collect();
+
+    return {
+      totalRepos,
+      openIssues: openIssues.length,
+      openPRs: openPRs.length,
+    };
   },
 });
