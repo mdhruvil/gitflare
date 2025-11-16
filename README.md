@@ -2,6 +2,8 @@
 
 A self-hosted GitHub alternative built to run on serverless platforms. Built on top of Cloudflare Workers, Durable Objects and Convex.
 
+Visit [https://gitvex.mdhruvil.page/mdhruvil/gitvex](https://gitvex.mdhruvil.page/mdhruvil/gitvex) to view GitVex repository on GitVex itself.
+
 ## Features
 
 - **Serverless Architecture** - No VMs, No Containers, Just Durable Objects and Convex
