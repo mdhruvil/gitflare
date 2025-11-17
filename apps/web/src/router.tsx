@@ -31,7 +31,7 @@ export function getRouter() {
   const router = routerWithQueryClient(
     createTanStackRouter({
       routeTree,
-      defaultPreload: "viewport",
+      defaultPreload: "intent",
       scrollRestoration(opts) {
         const pathname = opts.location.pathname;
 
