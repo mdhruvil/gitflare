@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/correctness/useHookAtTopLevel: we don't want to load data if the user is not logged in, this is for the useSuspenseQuery hooks in RouteComponent */
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@gitvex/backend/convex/_generated/api";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -40,9 +41,9 @@ export const Route = createFileRoute("/_layout/dashboard")({
 
     await Promise.all([
       queryClient
-        .ensureQueryData(
-          convexQuery(api.repositories.getByOwner, { owner: username })
-        )
+        .ensureQueryData({
+          ...convexQuery(api.repositories.getByOwner, { owner: username }),
+        })
         .catch(handleAndThrowConvexError),
       queryClient
         .ensureQueryData(convexQuery(api.repositories.getMyStats, {}))
@@ -63,6 +64,10 @@ function RouteComponent() {
   const user = session?.user;
   const username = user?.username ?? "";
 
+  if (!user?.username) {
+    return <Navigate to="/login" />;
+  }
+
   const { data: repositoriesData } = useSuspenseQuery(
     convexQuery(api.repositories.getByOwner, { owner: username })
   );
@@ -78,10 +83,6 @@ function RouteComponent() {
   const { data: recentPRs } = useSuspenseQuery(
     convexQuery(api.pulls.getMyPullRequests, { limit: 5 })
   );
-
-  if (!user?.username) {
-    return <Navigate to="/login" />;
-  }
 
   const repositories = repositoriesData.repos;
   return (
