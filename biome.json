@@ -20,6 +20,7 @@
       "!**/.svelte-kit",
       "!**/.source",
       "!**/convex/**/_generated",
+      "!**/.context",
       "!**/worker-configuration.d.ts"
     ]
   },
