@@ -5,8 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { CheckIcon, CopyIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
@@ -31,15 +30,15 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
-import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/_layout/settings")({
   component: RouteComponent,
   notFoundComponent: NotFoundComponent,
   loader: async ({ context: { queryClient } }) => {
-    await queryClient
-      .ensureQueryData(getSessionOptions)
-      .catch(handleAndThrowConvexError);
+    const data = await queryClient.ensureQueryData(getSessionOptions);
+    if (!data) {
+      throw redirect({ to: "/" });
+    }
   },
   pendingComponent: PendingComponent,
 });
@@ -101,38 +100,28 @@ function RouteComponent() {
   const user = session?.user;
 
   return (
-    <>
-      <Authenticated>
-        <div className="mx-auto w-full max-w-4xl p-6">
-          <h1 className="mb-6 font-bold text-3xl">Settings</h1>
+    <div className="mx-auto w-full max-w-4xl p-6">
+      <h1 className="mb-6 font-bold text-3xl">Settings</h1>
 
-          <Tabs defaultValue="profile">
-            <TabsList>
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="tokens">Personal Access Tokens</TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="profile">
+        <TabsList>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="tokens">Personal Access Tokens</TabsTrigger>
+        </TabsList>
 
-            <TabsContent value="profile">
-              <ProfileSettings
-                email={user?.email ?? "NO_EMAIL"}
-                name={user?.name ?? "NO_NAME"}
-                username={user?.username ?? "NO_USERNAME"}
-              />
-            </TabsContent>
+        <TabsContent value="profile">
+          <ProfileSettings
+            email={user?.email ?? "NO_EMAIL"}
+            name={user?.name ?? "NO_NAME"}
+            username={user?.username ?? "NO_USERNAME"}
+          />
+        </TabsContent>
 
-            <TabsContent value="tokens">
-              <PersonalAccessTokens />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </Authenticated>
-      <Unauthenticated>
-        <Navigate to="/" />
-      </Unauthenticated>
-      <AuthLoading>
-        <PendingComponent />
-      </AuthLoading>
-    </>
+        <TabsContent value="tokens">
+          <PersonalAccessTokens />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
 

@@ -98,8 +98,9 @@ const update = fn(
     name: z.string().optional(),
     description: z.string().optional(),
     isPrivate: z.boolean().optional(),
+    ownerId: z.string(),
   }),
-  ({ id, name, description, isPrivate }) =>
+  ({ id, name, description, isPrivate, ownerId }) =>
     Result.tryCatchAsync(
       async () => {
         const updates: Partial<{
@@ -115,7 +116,7 @@ const update = fn(
         const [repo] = await db
           .update(repository)
           .set(updates)
-          .where(eq(repository.id, id))
+          .where(and(eq(repository.id, id), eq(repository.ownerId, ownerId)))
           .returning();
         return repo ?? null;
       },

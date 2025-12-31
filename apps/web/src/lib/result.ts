@@ -127,6 +127,26 @@ export class Ok<T, E> {
   match<U>(handlers: { ok: (value: T) => U; err: (error: E) => U }): U {
     return handlers.ok(this.value);
   }
+
+  /**
+   * Extract success value or throw error with optional message overrides.
+   *
+   * @param messageOverrides - Optional map of error tags to custom messages (type-safe)
+   * @returns The success value
+   *
+   * @example
+   * ```typescript
+   * const value = result.unwrapOrThrow();
+   * // Or with custom messages (only valid error tags allowed):
+   * const value = result.unwrapOrThrow({
+   *   DatabaseError: "Failed to fetch repositories.",
+   *   ValidationError: "Invalid input provided.",
+   * });
+   * ```
+   */
+  unwrapOrThrow(_messageOverrides?: ErrorMessageOverrides<E>): T {
+    return this.value;
+  }
 }
 
 // SAFETY: Err only stores `error: E`. The `T` type parameter is phantom (unused at runtime).
@@ -237,6 +257,55 @@ export class Err<T, E> {
    */
   match<U>(handlers: { ok: (value: T) => U; err: (error: E) => U }): U {
     return handlers.err(this.error);
+  }
+
+  /**
+   * Extract success value or throw error with optional message overrides.
+   *
+   * @param messageOverrides - Optional map of error tags to custom messages (type-safe)
+   * @throws The original error if no overrides, or Error with custom message
+   *
+   * @example
+   * ```typescript
+   * const value = result.unwrapOrThrow();
+   * // Or with custom messages (only valid error tags allowed):
+   * const value = result.unwrapOrThrow({
+   *   DatabaseError: "Failed to fetch repositories.",
+   *   ValidationError: "Invalid input provided.",
+   * });
+   * ```
+   */
+  unwrapOrThrow(messageOverrides?: ErrorMessageOverrides<E>): never {
+    const error = this.error;
+
+    // If no overrides provided, throw the original error
+    if (!messageOverrides) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(String(error));
+    }
+
+    // tagged errors
+    if (
+      error !== null &&
+      typeof error === "object" &&
+      "_tag" in error &&
+      typeof error._tag === "string"
+    ) {
+      const customMessage = (messageOverrides as Record<string, string>)[
+        error._tag
+      ];
+      if (customMessage) {
+        throw new Error(customMessage, { cause: error });
+      }
+    }
+
+    // Fallback: throw original error
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(String(error));
   }
 }
 
@@ -400,6 +469,22 @@ function firstOk<T, E>(results: Result<T, E>[]): Result<T, E> {
 
 export type InferOk<T> = T extends Ok<infer R, unknown> ? R : never;
 export type InferErr<T> = T extends Err<unknown, infer E> ? E : never;
+
+/**
+ * Extract the _tag literal from a tagged error type.
+ * Returns never if the error doesn't have a _tag property.
+ */
+type ExtractErrorTag<E> = E extends { readonly _tag: infer Tag extends string }
+  ? Tag
+  : never;
+
+/**
+ * Map of error tags to custom error messages.
+ * Only allows keys that match the _tag of the error type E.
+ */
+export type ErrorMessageOverrides<E> = Partial<
+  Record<ExtractErrorTag<E>, string>
+>;
 
 export const Result = {
   ok,

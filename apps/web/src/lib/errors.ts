@@ -17,3 +17,12 @@ export class ValidationError extends TaggedError("ValidationError")<{
 export class DatabaseError extends TaggedError("DatabaseError")<{
   cause?: unknown;
 }> {}
+
+export class UnauthorizedError extends TaggedError("UnauthorizedError")<{
+  cause?: unknown;
+}> {}
+
+export class NotFoundError extends TaggedError("NotFoundError")<{
+  cause?: unknown;
+  what?: string;
+}> {}

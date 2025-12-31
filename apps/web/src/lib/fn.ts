@@ -1,12 +1,6 @@
 import type * as z from "zod";
 import { ValidationError } from "./errors";
-import { Err, type Result } from "./result";
-
-/**
- * Helper types to extract Ok and Err types from a Result.
- */
-type InferOk<T> = T extends Result<infer R, unknown> ? R : never;
-type InferErr<T> = T extends Result<unknown, infer E> ? E : never;
+import { Err, type InferErr, type InferOk, type Result } from "./result";
 
 /**
  * Unwrap Promise if present, otherwise return T.
@@ -58,7 +52,7 @@ export function fn<
   cb: (input: z.infer<T>) => Ret
 ): {
   (
-    input: unknown
+    input: z.infer<T>
   ): Ret extends Promise<unknown>
     ? Promise<
         Result<

@@ -83,6 +83,9 @@ const getByFullNameAndNumber = fn(
       async () => {
         const result = await db.query.issue.findFirst({
           where: and(eq(issue.fullName, fullName), eq(issue.number, number)),
+          with: {
+            comments: true,
+          },
         });
         return result ?? null;
       },
