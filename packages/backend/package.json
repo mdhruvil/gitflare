@@ -9,12 +9,12 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.10.4",
     "typescript": "catalog:"
   },
   "dependencies": {
-    "convex": "catalog:",
+    "@convex-dev/better-auth": "catalog:",
     "better-auth": "catalog:",
-    "@convex-dev/better-auth": "catalog:"
+    "convex": "catalog:"
   }
 }
