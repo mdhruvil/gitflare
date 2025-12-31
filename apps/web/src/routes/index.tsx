@@ -66,11 +66,11 @@ function HomeComponent() {
           <p className="text-xl">What is GitVex ?</p>
           <h3 className="text-pretty text-lg text-muted-foreground">
             GitVex is a fully open-source serverless git hosting platform. Built
-            on top of Cloudflare Workers, Durable Objects and Convex.
+            on top of Cloudflare Workers, Durable Objects.
           </h3>
           <div className="space-y-2 leading-relaxed">
             <FeatureRow
-              description="No VMs, No Containers, Just Durable Objects and Convex."
+              description="No VMs, No Containers, Just Durable Objects"
               feature="Serverless Architecture"
             />
             <FeatureRow
@@ -114,8 +114,8 @@ function HomeComponent() {
             />
             <TechRow
               description="To store user data, repository metadata, issues, and other metadata."
-              href="https://www.convex.dev/"
-              title="Convex"
+              href="https://developers.cloudflare.com/d1/"
+              title="Cloudflare D1"
             />
             <TechRow
               description="For handeling authentication and authorization."
