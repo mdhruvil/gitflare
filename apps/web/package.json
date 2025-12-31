@@ -15,12 +15,9 @@
     "db:migrate:remote": "wrangler d1 migrations apply DB --remote"
   },
   "dependencies": {
-    "@convex-dev/better-auth": "catalog:",
-    "@convex-dev/react-query": "^0.0.0-alpha.8",
     "@fontsource-variable/inter": "^5.2.8",
     "@git-diff-view/file": "^0.0.35",
     "@git-diff-view/react": "^0.0.35",
-    "@gitvex/backend": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-collapsible": "^1.1.12",
@@ -44,7 +41,6 @@
     "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "convex": "catalog:",
     "date-fns": "^4.1.0",
     "dofs": "^0.1.0",
     "drizzle-orm": "^0.45.1",
