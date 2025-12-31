@@ -11,6 +11,10 @@
     "**/*.code-search": true,
     "**/.context/**": true
   },
+  "git.ignoredRepositories": [
+    ".context/dofs",
+    ".context/isomorphic-git",
+  ],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "biome.enabled": true,
   "[javascript]": {
