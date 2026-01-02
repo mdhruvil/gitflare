@@ -9,7 +9,6 @@ import { NotFoundComponent } from "@/components/404-components";
 import { BranchSelector } from "@/components/branch-selector";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { handleAndThrowConvexError } from "@/lib/convex";
 import { cn } from "@/lib/utils";
 
 const searchSchema = z.object({
@@ -24,15 +23,13 @@ export const Route = createFileRoute("/$owner/$repo/_layout/commits")({
     ref: search.ref,
   }),
   loader: async ({ params, context: { queryClient }, deps }) => {
-    await queryClient
-      .ensureQueryData(
-        getCommitsQueryOptions({
-          owner: params.owner,
-          repo: params.repo,
-          ref: deps.ref,
-        })
-      )
-      .catch(handleAndThrowConvexError);
+    await queryClient.ensureQueryData(
+      getCommitsQueryOptions({
+        owner: params.owner,
+        repo: params.repo,
+        ref: deps.ref,
+      })
+    );
   },
   pendingComponent: CommitsPendingComponent,
 });

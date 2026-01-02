@@ -1,25 +1,21 @@
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "@gitvex/backend/convex/_generated/api";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
+import { getIssuesByRepoOptions } from "@/api/issues";
 import { NotFoundComponent } from "@/components/404-components";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { handleAndThrowConvexError } from "@/lib/convex";
-
-const getIssuesQueryOptions = (owner: string, repo: string) =>
-  convexQuery(api.issues.getByRepo, {
-    fullName: `${owner}/${repo}`,
-  });
 
 export const Route = createFileRoute("/$owner/$repo/_layout/issues/")({
   component: RouteComponent,
   notFoundComponent: NotFoundComponent,
   loader: async ({ params, context: { queryClient } }) => {
-    await queryClient
-      .ensureQueryData(getIssuesQueryOptions(params.owner, params.repo))
-      .catch(handleAndThrowConvexError);
+    await queryClient.ensureQueryData(
+      getIssuesByRepoOptions({
+        owner: params.owner,
+        repo: params.repo,
+      })
+    );
   },
   pendingComponent: PendingComponent,
 });
@@ -27,7 +23,10 @@ export const Route = createFileRoute("/$owner/$repo/_layout/issues/")({
 function RouteComponent() {
   const params = Route.useParams();
   const { data: issues } = useSuspenseQuery(
-    getIssuesQueryOptions(params.owner, params.repo)
+    getIssuesByRepoOptions({
+      owner: params.owner,
+      repo: params.repo,
+    })
   );
 
   return (
@@ -62,7 +61,7 @@ function RouteComponent() {
         {issues.map((issue) => (
           <Link
             className="block px-4 py-4 transition-colors hover:bg-muted/50"
-            key={issue._id}
+            key={issue.id}
             params={{ ...params, issueNumber: issue.number.toString() }}
             to="/$owner/$repo/issues/$issueNumber"
           >
@@ -78,7 +77,7 @@ function RouteComponent() {
                   <span>•</span>
                   <span>
                     {issue.creatorUsername} opened{" "}
-                    {formatDistanceToNow(new Date(issue._creationTime), {
+                    {formatDistanceToNow(new Date(issue.createdAt), {
                       addSuffix: true,
                     })}
                   </span>

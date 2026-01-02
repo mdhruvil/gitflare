@@ -1,0 +1,6 @@
+[submodule ".context/dofs"]
+	path = .context/dofs
+	url = https://github.com/benallfree/dofs
+[submodule ".context/isomorphic-git"]
+	path = .context/isomorphic-git
+	url = https://github.com/isomorphic-git/isomorphic-git

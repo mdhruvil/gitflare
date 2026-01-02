@@ -1,5 +1,3 @@
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "@gitvex/backend/convex/_generated/api";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   createFileRoute,
@@ -17,6 +15,7 @@ import {
 } from "lucide-react";
 import * as z from "zod";
 import { getBranchesQueryOptions } from "@/api/branches";
+import { getRepoByOwnerAndNameOpts } from "@/api/repos";
 import { getSessionOptions } from "@/api/session";
 import { NotFoundComponent } from "@/components/404-components";
 import { ErrorComponent } from "@/components/error-component";
@@ -29,7 +28,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserProfileButton } from "@/components/user-profile-button";
-import { handleAndThrowConvexError } from "@/lib/convex";
 
 const searchSchema = z.object({
   ref: z.string().optional(),
@@ -47,14 +45,12 @@ export const Route = createFileRoute("/$owner/$repo/_layout")({
         repo: params.repo,
       })
     );
-    await queryClient
-      .ensureQueryData(
-        convexQuery(api.repositories.getByOwnerAndName, {
-          owner: params.owner,
-          name: params.repo,
-        })
-      )
-      .catch(handleAndThrowConvexError);
+    await queryClient.ensureQueryData(
+      getRepoByOwnerAndNameOpts({
+        owner: params.owner,
+        name: params.repo,
+      })
+    );
   },
 });
 
@@ -69,7 +65,7 @@ function RouteComponent() {
 
   const { data: session } = useSuspenseQuery(getSessionOptions);
   const { data: repository } = useSuspenseQuery(
-    convexQuery(api.repositories.getByOwnerAndName, {
+    getRepoByOwnerAndNameOpts({
       owner,
       name: repo,
     })

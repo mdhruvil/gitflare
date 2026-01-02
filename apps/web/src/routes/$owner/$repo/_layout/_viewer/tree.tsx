@@ -6,7 +6,6 @@ import { z } from "zod";
 import { getTreeQueryOptions } from "@/api/tree";
 import { NotFoundComponent } from "@/components/404-components";
 import { Skeleton } from "@/components/ui/skeleton";
-import { handleAndThrowConvexError } from "@/lib/convex";
 
 const searchSchema = z.object({
   ref: z.string().optional(),
@@ -22,16 +21,14 @@ export const Route = createFileRoute("/$owner/$repo/_layout/_viewer/tree")({
     path: search.path,
   }),
   loader: async ({ params, context: { queryClient }, deps }) => {
-    await queryClient
-      .ensureQueryData(
-        getTreeQueryOptions({
-          owner: params.owner,
-          repo: params.repo,
-          ref: deps.ref,
-          path: deps.path,
-        })
-      )
-      .catch(handleAndThrowConvexError);
+    await queryClient.ensureQueryData(
+      getTreeQueryOptions({
+        owner: params.owner,
+        repo: params.repo,
+        ref: deps.ref,
+        path: deps.path,
+      })
+    );
   },
   pendingComponent: TreePendingComponent,
 });

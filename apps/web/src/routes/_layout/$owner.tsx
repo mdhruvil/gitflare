@@ -1,8 +1,7 @@
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "@gitvex/backend/convex/_generated/api";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { GitBranchIcon, LockIcon } from "lucide-react";
+import { getReposByOwnerOpts } from "@/api/repos";
 import { NotFoundComponent } from "@/components/404-components";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,31 +10,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/_layout/$owner")({
   component: RouteComponent,
   notFoundComponent: NotFoundComponent,
   loader: async ({ params, context: { queryClient } }) => {
-    await queryClient
-      .ensureQueryData(
-        convexQuery(api.repositories.getByOwner, {
-          owner: params.owner,
-        })
-      )
-      .catch(handleAndThrowConvexError);
+    await queryClient.ensureQueryData(
+      getReposByOwnerOpts({ owner: params.owner })
+    );
   },
 });
 
 function RouteComponent() {
   const { owner } = Route.useParams();
-  const { data } = useSuspenseQuery(
-    convexQuery(api.repositories.getByOwner, {
-      owner,
-    })
+  const { data: repositories } = useSuspenseQuery(
+    getReposByOwnerOpts({ owner })
   );
-
-  const repositories = data.repos;
 
   return (
     <div className="py-8">
@@ -54,8 +44,8 @@ function RouteComponent() {
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="font-bold text-2xl">{data.owner?.name}</h2>
-            <p className="text-muted-foreground">{data.owner?.username}</p>
+            <h2 className="font-bold text-2xl">{owner}</h2>
+            <p className="text-muted-foreground">{owner}</p>
           </div>
         </div>
         <div className="col-span-3">
@@ -67,7 +57,7 @@ function RouteComponent() {
               repositories.map((repo) => (
                 <Link
                   className="h-full"
-                  key={repo._id}
+                  key={repo.id}
                   params={{ owner: repo.owner, repo: repo.name }}
                   to="/$owner/$repo"
                 >

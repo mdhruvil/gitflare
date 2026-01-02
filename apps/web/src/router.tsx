@@ -1,58 +1,36 @@
-import { ConvexQueryClient } from "@convex-dev/react-query";
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
-import { routerWithQueryClient } from "@tanstack/react-router-with-query";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
 import Loader from "./components/loader";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 
 export function getRouter() {
-  const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
-  if (!CONVEX_URL) {
-    throw new Error("VITE_CONVEX_URL is not defined");
-  }
-  const convex = new ConvexReactClient(CONVEX_URL, {
-    unsavedChangesWarning: false,
-  });
+  const queryClient = new QueryClient();
 
-  const convexQueryClient = new ConvexQueryClient(convex);
+  const router = createTanStackRouter({
+    routeTree,
+    defaultPreload: "intent",
+    scrollRestoration(opts) {
+      const pathname = opts.location.pathname;
 
-  const queryClient: QueryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        queryKeyHashFn: convexQueryClient.hashFn(),
-        queryFn: convexQueryClient.queryFn(),
-      },
+      // Disable scroll restoration for commit viewer pages
+      if (/^\/[^/]+\/[^/]+\/commits\/[0-9a-f]{7,40}$/i.test(pathname)) {
+        return false;
+      }
+
+      return true;
     },
+    defaultPendingComponent: () => <Loader />,
+    defaultNotFoundComponent: () => <div>Not Found</div>,
+    context: { queryClient },
   });
-  convexQueryClient.connect(queryClient);
 
-  const router = routerWithQueryClient(
-    createTanStackRouter({
-      routeTree,
-      defaultPreload: "intent",
-      scrollRestoration(opts) {
-        const pathname = opts.location.pathname;
+  setupRouterSsrQueryIntegration({
+    queryClient,
+    router,
+  });
 
-        // Disable scroll restoration for commit viewer pages
-        if (/^\/[^/]+\/[^/]+\/commits\/[0-9a-f]{7,40}$/i.test(pathname)) {
-          return false;
-        }
-
-        return true;
-      },
-      defaultPendingComponent: () => <Loader />,
-      defaultNotFoundComponent: () => <div>Not Found</div>,
-      context: { queryClient, convexClient: convex, convexQueryClient },
-      Wrap: ({ children }) => (
-        <ConvexProvider client={convexQueryClient.convexClient}>
-          {children}
-        </ConvexProvider>
-      ),
-    }),
-    queryClient
-  );
   return router;
 }
 

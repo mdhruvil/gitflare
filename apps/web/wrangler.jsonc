@@ -34,5 +34,12 @@
       "new_sqlite_classes": ["Repo"],
       "tag": "v1"
     }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gitvex-db",
+      "database_id": "4ec74566-e9a9-4f18-865a-4514767a9b9f"
+    }
   ]
 }
