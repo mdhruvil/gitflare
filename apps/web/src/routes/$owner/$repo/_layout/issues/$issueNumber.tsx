@@ -33,7 +33,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const params = Route.useParams();
-  const { data: issue } = useSuspenseQuery(
+  const { data: issue, refetch: refetchIssue } = useSuspenseQuery(
     getIssueByRepoAndNumberOptions({
       owner: params.owner,
       repo: params.repo,
@@ -50,8 +50,9 @@ function RouteComponent() {
           body,
         },
       }),
-    onSuccess: () => {
+    onSuccess: async () => {
       setCommentBody("");
+      await refetchIssue();
     },
     onError: (err) => {
       console.error("Error creating comment:", err);
