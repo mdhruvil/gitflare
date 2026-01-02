@@ -61,3 +61,6 @@ dev-dist
 
 # Sentry Config File
 .sentryclirc
+
+# Localflare generated files
+.localflare/

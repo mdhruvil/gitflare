@@ -87,7 +87,7 @@ export const updateIssueStatusFn = createServerFn({ method: "POST" })
     );
 
     const { user } = sessionResult.unwrapOrThrow({
-      UnauthorizedError: "You must be logged in to create a repository.",
+      UnauthorizedError: "You must be logged in to update an issue.",
     });
 
     const issueResult = (await Issue.getById({ id: data.issueId }))

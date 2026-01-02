@@ -18,19 +18,23 @@ import { Skeleton } from "./ui/skeleton";
 export function UserProfileButton() {
   const { data, isLoading } = useQuery(getSessionOptions);
 
-  if (isLoading) {
+  // here we explicitly check for undefined and null
+  // because when query is loading, data is undefined,
+  // and the user is not logged in, data is null (from better-auth)
+
+  if (isLoading || data === undefined) {
     return <Skeleton className="h-10 w-10 rounded-full" />;
   }
 
-  const user = data?.user;
-
-  if (!user) {
+  if (!isLoading && data === null) {
     return (
       <Link className={buttonVariants({ variant: "outline" })} to="/login">
         Sign In
       </Link>
     );
   }
+
+  const user = data?.user;
 
   return (
     <div className="flex items-center gap-6">

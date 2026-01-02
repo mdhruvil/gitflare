@@ -23,7 +23,8 @@ export const createCommentForIssueFn = createServerFn({ method: "POST" })
       session ? Result.ok(session) : Result.err(new UnauthorizedError())
     );
     const { user } = sessionResult.unwrapOrThrow({
-      UnauthorizedError: "You must be logged in to create a comment.",
+      UnauthorizedError:
+        "You must be logged in to create a comment for an issue.",
     });
 
     if (!user.username) {
