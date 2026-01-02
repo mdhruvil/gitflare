@@ -34,7 +34,7 @@ export const issue = sqliteTable(
   "issue",
   {
     id: integer("id").primaryKey(),
-    repositoryId: text("repository_id")
+    repositoryId: integer("repository_id")
       .notNull()
       .references(() => repository.id, { onDelete: "cascade" }),
     fullName: text("full_name").notNull(), // e.g., "owner/repo"
@@ -68,7 +68,7 @@ export const pullRequest = sqliteTable(
   "pull_request",
   {
     id: integer("id").primaryKey(),
-    repositoryId: text("repository_id")
+    repositoryId: integer("repository_id")
       .notNull()
       .references(() => repository.id, { onDelete: "cascade" }),
     fullName: text("full_name").notNull(), // e.g., "owner/repo"

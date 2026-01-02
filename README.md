@@ -16,7 +16,6 @@ Visit [https://gitvex.mdhruvil.page/mdhruvil/gitvex](https://gitvex.mdhruvil.pag
 ## Tech Stack
 
 - **[Tanstack Start](https://tanstack.com/start/latest)** - As a framework for building the web interface
--
 - **[Cloudflare Workers](https://developers.cloudflare.com/workers/)** - To handle Git smart HTTP protocol requests and hosting the web interface
 - **[Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/)** - To store and manage Git repository data
 - **[Better Auth](https://www.better-auth.com/)** - For handling authentication and authorization
@@ -132,13 +131,12 @@ MIT
 
 ## Acknowledgments
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack combining React, TanStack Start, Convex, and more.
+This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack combining React, TanStack Start and more.
 
 ## Support
 
 For issues and questions:
 
 - Open an issue on GitHub
-- Check the [Convex documentation](https://docs.convex.dev/)
 - Check the [TanStack documentation](https://tanstack.com/)
 - Check the [Cloudflare Workers documentation](https://developers.cloudflare.com/workers/)

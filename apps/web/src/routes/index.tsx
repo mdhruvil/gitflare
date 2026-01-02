@@ -32,7 +32,7 @@ function HomeComponent() {
             </h1>
             <p className="max-w-2/3 text-muted-foreground text-sm leading-relaxed sm:text-base">
               GitVex is a fully open-source serverless git hosting platform. No
-              VMs, No Containers, Just Durable Objects and Convex.
+              VMs, No Containers, Just Durable Objects.
             </p>
           </div>
           <div className="flex gap-3">

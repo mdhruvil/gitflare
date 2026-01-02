@@ -53,17 +53,12 @@ export function fn<
 ): {
   (
     input: z.infer<T>
-  ): Ret extends Promise<unknown>
-    ? Promise<
-        Result<
-          InferOk<UnwrapResult<Ret>>,
-          ValidationError | InferErr<UnwrapResult<Ret>>
-        >
-      >
-    : Result<
-        InferOk<UnwrapResult<Ret>>,
-        ValidationError | InferErr<UnwrapResult<Ret>>
-      >;
+  ): Promise<
+    Result<
+      InferOk<UnwrapResult<Ret>>,
+      ValidationError | InferErr<UnwrapResult<Ret>>
+    >
+  >;
   force: (input: z.infer<T>) => Ret;
   schema: T;
 } {
@@ -76,12 +71,12 @@ export function fn<
           issues: parsed.error.issues,
         })
       );
-      // Check if callback returns a Promise by checking the prototype
-      // We need to return the same type (Promise or not) as the callback
-      const sample = cb.constructor.name === "AsyncFunction";
-      return sample ? Promise.resolve(err) : err;
+      // Always wrap in Promise.resolve().then() to match async callback behavior
+      // This is more reliable than checking constructor.name which fails with
+      // arrow functions, bound functions, and minified code
+      return Promise.resolve(err);
     }
-    return cb(parsed.data);
+    return Promise.resolve(cb(parsed.data));
   };
 
   result.force = (input: z.infer<T>): Ret => cb(input);

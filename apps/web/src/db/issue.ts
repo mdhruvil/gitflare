@@ -29,7 +29,7 @@ const getByRepositoryId = fn(
   ({ repositoryId, status }) =>
     Result.tryCatchAsync(
       async () => {
-        const conditions = [eq(issue.repositoryId, String(repositoryId))];
+        const conditions = [eq(issue.repositoryId, repositoryId)];
         if (status) {
           conditions.push(eq(issue.status, status));
         }
@@ -177,7 +177,7 @@ const create = fn(
         const [created] = await db
           .insert(issue)
           .values({
-            repositoryId: String(repositoryId),
+            repositoryId,
             fullName,
             number,
             title,

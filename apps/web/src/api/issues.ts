@@ -166,12 +166,21 @@ export const createIssueFn = createServerFn({ method: "POST" })
       NotFoundError: `Repository not found (${data.owner}/${data.repo})`,
     });
 
+    const lastNumberResult = await Issue.getLastNumber({
+      fullName: `${data.owner}/${data.repo}`,
+    });
+
+    const lastNumber = lastNumberResult.unwrapOrThrow({
+      DatabaseError:
+        "Database error occurred while fetching last issue number.",
+    });
+
     const issueResult = await Issue.create({
       creatorId: user.id,
       creatorUsername: user.username,
       repositoryId: repository.id,
       fullName: `${data.owner}/${data.repo}`,
-      number: 1,
+      number: lastNumber + 1,
       title: data.title,
       body: data.body,
     });

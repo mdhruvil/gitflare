@@ -41,7 +41,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       {
         property: "og:description",
         content:
-          "GitVex is a fully open-source serverless git hosting platform. No VMs, No Containers, Just Durable Objects and Convex.",
+          "GitVex is a fully open-source serverless git hosting platform. No VMs, No Containers, Just Durable Objects.",
       },
       {
         property: "og:image",
