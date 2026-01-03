@@ -58,7 +58,6 @@ jobs:
   cleanup-preview:
     if: ${{ github.event.action == 'closed' }}
     runs-on: ubuntu-latest
-    environment: preview
     permissions:
       contents: read
       pull-requests: write
