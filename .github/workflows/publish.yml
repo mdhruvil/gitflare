@@ -6,6 +6,18 @@ on:
 concurrency:
   group: publish
   cancel-in-progress: false
+env:
+  # Alchemy Vars
+  STAGE: prod
+  GITHUB_SHA: ${{ github.sha }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  ALCHEMY_PASSWORD: ${{ secrets.ALCHEMY_PASSWORD }}
+  ALCHEMY_STATE_TOKEN: ${{ secrets.ALCHEMY_STATE_TOKEN }}
+  # App Secrets
+  BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -27,12 +39,3 @@ jobs:
         run: pnpm install
       - name: Deploy to Production
         run: pnpm --filter ./apps/web run deploy
-        env:
-          STAGE: prod
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ALCHEMY_PASSWORD: ${{ secrets.ALCHEMY_PASSWORD }}
-          ALCHEMY_STATE_TOKEN: ${{ secrets.ALCHEMY_STATE_TOKEN }}
