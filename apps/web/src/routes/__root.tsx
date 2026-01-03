@@ -32,24 +32,24 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "GitVex",
+        title: "Gitflare",
       },
       {
         property: "og:title",
-        content: "GitVex",
+        content: "Gitflare",
       },
       {
         property: "og:description",
         content:
-          "GitVex is a fully open-source serverless git hosting platform. No VMs, No Containers, Just Durable Objects.",
+          "Gitflare is a fully open-source serverless git hosting platform. No VMs, No Containers, Just Durable Objects.",
       },
       {
         property: "og:image",
-        content: "https://gitvex.mdhruvil.page/og.png",
+        content: "https://gitflare.mdhruvil.com/og.png",
       },
       {
         property: "og:url",
-        content: "https://gitvex.mdhruvil.page",
+        content: "https://gitflare.mdhruvil.com",
       },
       {
         property: "og:type",
@@ -61,7 +61,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       },
       {
         property: "twitter:image",
-        content: "https://gitvex.mdhruvil.page/og.png",
+        content: "https://gitflare.mdhruvil.com/og.png",
       },
     ],
     links: [

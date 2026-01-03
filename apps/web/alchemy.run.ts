@@ -57,7 +57,7 @@ if (process.env.PULL_REQUEST) {
 
   await GitHubComment("pr-preview-comment", {
     owner: process.env.GITHUB_REPOSITORY_OWNER || "mdhruvil",
-    repository: process.env.GITHUB_REPOSITORY_NAME || "gitvex",
+    repository: process.env.GITHUB_REPOSITORY_NAME || "gitflare",
     issueNumber: Number(process.env.PULL_REQUEST),
     body: `
 ## 🚀 Preview Deployed

@@ -1,6 +1,6 @@
-# Agent Guidelines for gitvex
+# Agent Guidelines for gitflare
 
-Gitvex is a selfhosted GitHub alternative which can be hosted on serverless platforms like Cloudflare Workers.
+Gitflare is a selfhosted GitHub alternative which can be hosted on serverless platforms like Cloudflare Workers.
 
 ## Tech stack
 

@@ -18,7 +18,7 @@ function HomeComponent() {
           <div className="flex items-center justify-between">
             <Link className="flex items-center gap-3" to="/">
               <GitBranchIcon className="size-5" />
-              <span className="font-semibold text-lg">GitVex</span>
+              <span className="font-semibold text-lg">Gitflare</span>
             </Link>
             <UserProfileButton />
           </div>
@@ -31,8 +31,8 @@ function HomeComponent() {
               Git Hosting Reimagined
             </h1>
             <p className="max-w-2/3 text-muted-foreground text-sm leading-relaxed sm:text-base">
-              GitVex is a fully open-source serverless git hosting platform. No
-              VMs, No Containers, Just Durable Objects.
+              Gitflare is a fully open-source serverless git hosting platform.
+              No VMs, No Containers, Just Durable Objects.
             </p>
           </div>
           <div className="flex gap-3">
@@ -42,7 +42,7 @@ function HomeComponent() {
             </Link>
             <a
               className={buttonVariants({ variant: "outline" })}
-              href="https://github.com/mdhruvil/gitvex"
+              href="https://github.com/mdhruvil/gitflare"
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -63,10 +63,10 @@ function HomeComponent() {
       </div>
       <div className="border-b">
         <section className="mx-auto my-10 max-w-5xl space-y-6 px-4 sm:my-20">
-          <p className="text-xl">What is GitVex ?</p>
+          <p className="text-xl">What is Gitflare ?</p>
           <h3 className="text-pretty text-lg text-muted-foreground">
-            GitVex is a fully open-source serverless git hosting platform. Built
-            on top of Cloudflare Workers, Durable Objects.
+            Gitflare is a fully open-source serverless git hosting platform.
+            Built on top of Cloudflare Workers, Durable Objects.
           </h3>
           <div className="space-y-2 leading-relaxed">
             <FeatureRow
@@ -134,7 +134,7 @@ function HomeComponent() {
       <section className="mx-auto items-center max-sm:divide-y sm:flex sm:divide-x">
         <a
           className="flex h-30 w-full grow items-center justify-center gap-3 text-lg underline-offset-8 hover:bg-accent hover:underline"
-          href="https://github.com/mdhruvil/gitvex"
+          href="https://github.com/mdhruvil/gitflare"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -207,7 +207,7 @@ function HeroCodeBlock() {
             <span style={{ color: "#A5D6FF" }}> origin</span>
             <span style={{ color: "#A5D6FF" }}>
               {" "}
-              https://gitvex.mdhruvil.page/username/repo.git
+              https://gitflare.mdhruvil.com/username/repo.git
             </span>
             <span style={{ color: "#E6EDF3" }}> </span>
           </span>

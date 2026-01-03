@@ -1,8 +1,9 @@
-# Gitvex
+# Gitflare
 
-A self-hosted GitHub alternative built to run on serverless platforms. Built on top of Cloudflare Workers, Durable Objects.
+A self-hosted GitHub alternative built to run on Cloudflare Developer Platform. Built on top of Cloudflare Workers, Durable Objects.
 
-Visit [https://gitvex.mdhruvil.page/mdhruvil/gitvex](https://gitvex.mdhruvil.page/mdhruvil/gitvex) to view GitVex repository on GitVex itself.
+> [!WARNING]
+> Gitflare is currently in very early development. Expect bugs and missing features.
 
 ## Features
 
@@ -18,11 +19,12 @@ Visit [https://gitvex.mdhruvil.page/mdhruvil/gitvex](https://gitvex.mdhruvil.pag
 - **[Tanstack Start](https://tanstack.com/start/latest)** - As a framework for building the web interface
 - **[Cloudflare Workers](https://developers.cloudflare.com/workers/)** - To handle Git smart HTTP protocol requests and hosting the web interface
 - **[Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/)** - To store and manage Git repository data
+- **[Cloudflare D1](https://developers.cloudflare.com/d1/)** - For storing user data, repository metadata, issues, and pull requests
 - **[Better Auth](https://www.better-auth.com/)** - For handling authentication and authorization
 
 ## How It Works
 
-GitVex reimagines Git hosting with a fully serverless architecture. Here's how the pieces fit together:
+Gitflare reimagines Git hosting with a fully serverless architecture. Here's how the pieces fit together:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -67,7 +69,7 @@ GitVex reimagines Git hosting with a fully serverless architecture. Here's how t
 
 **1. Git Protocol Handling**
 
-When you interact with a GitVex repository using standard Git commands, the request hits **HTTP handlers in the TanStack Start application**. These handlers implement the Git Smart HTTP protocol, translating Git's wire protocol into operations that can be executed against the repository storage. The entire TanStack Start app runs on **Cloudflare Workers**, deployed globally at the edge for minimal latency.
+When you interact with a Gitflare repository using standard Git commands, the request hits **HTTP handlers in the TanStack Start application**. These handlers implement the Git Smart HTTP protocol, translating Git's wire protocol into operations that can be executed against the repository storage. The entire TanStack Start app runs on **Cloudflare Workers**, deployed globally at the edge for minimal latency.
 
 **2. Repository Data Storage**
 
@@ -80,7 +82,7 @@ User data, repository metadata, issues, pull requests, and access control inform
 ## Project Structure
 
 ```
-gitvex/
+gitflare/
 ├── apps/
 │   └── web/                    # TanStack Start app deployed on Cloudflare Workers
 │                               # Contains Git Smart HTTP Protocol handlers, Durable
@@ -139,4 +141,4 @@ For issues and questions:
 
 - Open an issue on GitHub
 - Check the [TanStack documentation](https://tanstack.com/)
-- Check the [Cloudflare Workers documentation](https://developers.cloudflare.com/workers/)
+- Check the [Cloudflare documentation](https://developers.cloudflare.com/)

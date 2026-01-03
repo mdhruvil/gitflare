@@ -9,7 +9,7 @@ export async function advertiseCapabilities(
   if (service === "git-upload-pack") {
     const lines = [
       PktLine.encode("version 2\n"),
-      PktLine.encode("agent=gitvex/0.0.1\n"),
+      PktLine.encode("agent=gitflare/0.0.1\n"),
 
       PktLine.encode("ls-refs\n"),
       PktLine.encode("fetch\n"),
