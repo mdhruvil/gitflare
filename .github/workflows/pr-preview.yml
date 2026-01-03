@@ -34,8 +34,9 @@ jobs:
         shell: bash
         run: pnpm install
       - name: Deploy Preview
-        run: pnpm --filter ./apps/web deploy --stage pr-${{ github.event.pull_request.number }}
+        run: pnpm --filter ./apps/web deploy
         env:
+          STAGE: pr-${{ github.event.pull_request.number }}
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
