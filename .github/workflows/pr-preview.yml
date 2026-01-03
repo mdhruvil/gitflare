@@ -1,6 +1,6 @@
 name: Preview
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - reopened
@@ -13,11 +13,16 @@ jobs:
   deploy-preview:
     if: ${{ github.event.action != 'closed' }}
     runs-on: ubuntu-latest
+    # Requires approval for external contributors (configure in repo Settings → Environments)
+    environment: preview
     permissions:
       contents: read
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Checkout the PR head commit (safe after environment approval)
+          ref: ${{ github.event.pull_request.head.sha }}
       - &a1
         name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -50,11 +55,15 @@ jobs:
   cleanup-preview:
     if: ${{ github.event.action == 'closed' }}
     runs-on: ubuntu-latest
+    # Cleanup also needs the environment for secrets access
+    environment: preview
     permissions:
       contents: read
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - *a1
       - *a2
       - *a3
