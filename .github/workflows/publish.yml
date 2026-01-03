@@ -26,7 +26,7 @@ jobs:
         shell: bash
         run: pnpm install
       - name: Deploy to Production
-        run: pnpm --filter ./apps/web deploy
+        run: pnpm --filter ./apps/web run deploy
         env:
           STAGE: prod
           GITHUB_SHA: ${{ github.sha }}
