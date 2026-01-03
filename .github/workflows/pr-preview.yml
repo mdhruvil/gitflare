@@ -9,11 +9,26 @@ on:
 concurrency:
   group: pr-preview-${{ github.event.pull_request.number }}
   cancel-in-progress: false
+env:
+  # Alchemy Vars
+  STAGE: pr-${{ github.event.pull_request.number }}
+  GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+  GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
+  PULL_REQUEST: ${{ github.event.pull_request.number }}
+  CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  ALCHEMY_PASSWORD: ${{ secrets.ALCHEMY_PASSWORD }}
+  ALCHEMY_STATE_TOKEN: ${{ secrets.ALCHEMY_STATE_TOKEN }}
+  # App Secrets
+  BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
 jobs:
   deploy-preview:
     if: ${{ github.event.action != 'closed' }}
     runs-on: ubuntu-latest
-    # Requires approval for external contributors (configure in repo Settings → Environments)
+    # Requires approval for external contributors (configured in repo Settings → Environments)
     environment: preview
     permissions:
       contents: read
@@ -40,22 +55,9 @@ jobs:
         run: pnpm install
       - name: Deploy Preview
         run: pnpm --filter ./apps/web run deploy
-        env:
-          STAGE: pr-${{ github.event.pull_request.number }}
-          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
-          GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
-          PULL_REQUEST: ${{ github.event.pull_request.number }}
-          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ALCHEMY_PASSWORD: ${{ secrets.ALCHEMY_PASSWORD }}
-          ALCHEMY_STATE_TOKEN: ${{ secrets.ALCHEMY_STATE_TOKEN }}
   cleanup-preview:
     if: ${{ github.event.action == 'closed' }}
     runs-on: ubuntu-latest
-    # Cleanup also needs the environment for secrets access
     environment: preview
     permissions:
       contents: read
@@ -69,15 +71,3 @@ jobs:
       - *a3
       - name: Cleanup Preview
         run: pnpm --filter ./apps/web run destroy
-        env:
-          STAGE: pr-${{ github.event.pull_request.number }}
-          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
-          GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
-          PULL_REQUEST: ${{ github.event.pull_request.number }}
-          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ALCHEMY_PASSWORD: ${{ secrets.ALCHEMY_PASSWORD }}
-          ALCHEMY_STATE_TOKEN: ${{ secrets.ALCHEMY_STATE_TOKEN }}
