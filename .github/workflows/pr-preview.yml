@@ -10,7 +10,7 @@ concurrency:
   group: pr-preview-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 env:
-  # Alchemy Vars
+  # Alchemy secrets
   STAGE: pr-${{ github.event.pull_request.number }}
   GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

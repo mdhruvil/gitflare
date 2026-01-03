@@ -1,59 +1,19 @@
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "@gitvex/backend/convex/_generated/api";
-import type { Id } from "@gitvex/backend/convex/_generated/dataModel";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { formatDistanceToNow } from "date-fns";
 import { CircleCheckIcon, CircleDotIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
+import { createCommentForIssueFn } from "@/api/comments";
+import {
+  getIssueByRepoAndNumberOptions,
+  updateIssueStatusFn,
+} from "@/api/issues";
 import { NotFoundComponent } from "@/components/404-components";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchMutation } from "@/lib/auth-server";
-import { handleAndThrowConvexError } from "@/lib/convex";
 import { cn } from "@/lib/utils";
-
-const getIssueQueryOptions = (owner: string, repo: string, number: number) =>
-  convexQuery(api.issues.getByRepoAndNumber, {
-    fullName: `${owner}/${repo}`,
-    number,
-  });
-
-const addCommentSchema = z.object({
-  issueId: z.custom<Id<"issues">>(),
-  body: z.string().min(1, "Comment cannot be empty"),
-});
-
-const addCommentServerFn = createServerFn({ method: "POST" })
-  .inputValidator(addCommentSchema)
-  .handler(async ({ data }) => {
-    const commentId = await fetchMutation(api.comments.addComment, {
-      issueId: data.issueId,
-      body: data.body,
-    }).catch(handleAndThrowConvexError);
-
-    return commentId;
-  });
-
-const updateIssueStatusSchema = z.object({
-  issueId: z.custom<Id<"issues">>(),
-  status: z.enum(["open", "closed"]),
-});
-
-const updateIssueStatusServerFn = createServerFn({ method: "POST" })
-  .inputValidator(updateIssueStatusSchema)
-  .handler(async ({ data }) => {
-    await fetchMutation(api.issues.update, {
-      id: data.issueId,
-      status: data.status,
-    }).catch(handleAndThrowConvexError);
-
-    return null;
-  });
 
 export const Route = createFileRoute(
   "/$owner/$repo/_layout/issues/$issueNumber"
@@ -61,56 +21,57 @@ export const Route = createFileRoute(
   component: RouteComponent,
   notFoundComponent: NotFoundComponent,
   loader: async ({ params, context: { queryClient } }) => {
-    await queryClient
-      .ensureQueryData(
-        getIssueQueryOptions(
-          params.owner,
-          params.repo,
-          Number(params.issueNumber)
-        )
-      )
-      .catch(handleAndThrowConvexError);
+    await queryClient.ensureQueryData(
+      getIssueByRepoAndNumberOptions({
+        owner: params.owner,
+        repo: params.repo,
+        number: Number(params.issueNumber),
+      })
+    );
   },
 });
 
 function RouteComponent() {
   const params = Route.useParams();
-  const { data: issue } = useSuspenseQuery(
-    getIssueQueryOptions(params.owner, params.repo, Number(params.issueNumber))
+  const { data: issue, refetch: refetchIssue } = useSuspenseQuery(
+    getIssueByRepoAndNumberOptions({
+      owner: params.owner,
+      repo: params.repo,
+      number: Number(params.issueNumber),
+    })
   );
   const [commentBody, setCommentBody] = useState("");
 
   const addCommentMutation = useMutation({
     mutationFn: async (body: string) =>
-      await addCommentServerFn({
+      await createCommentForIssueFn({
         data: {
-          issueId: issue._id,
+          issueId: issue.id,
           body,
         },
       }),
-    onSuccess: () => {
+    onSuccess: async () => {
       setCommentBody("");
+      await refetchIssue();
     },
     onError: (err) => {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to add comment";
-      toast.error(errorMessage);
+      console.error("Error creating comment:", err);
+      toast.error(err.message);
     },
   });
 
   const updateIssueStatusMutation = useMutation({
     mutationFn: async (status: "open" | "closed") =>
-      await updateIssueStatusServerFn({
+      await updateIssueStatusFn({
         data: {
-          issueId: issue._id,
+          issueId: issue.id,
           status,
         },
       }),
 
     onError: (err) => {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update issue status";
-      toast.error(errorMessage);
+      console.error("Error updating issue status:", err);
+      toast.error(err.message);
     },
   });
 
@@ -164,8 +125,8 @@ function RouteComponent() {
       <div className="space-y-4">
         {/* Original Comment */}
         <Comment
-          _creationTime={issue._creationTime}
-          content={issue.body}
+          _creationTime={issue.createdAt.getTime()}
+          content={issue.body ?? undefined}
           creatorUsername={issue.creatorUsername}
           type="description"
         />
@@ -178,10 +139,10 @@ function RouteComponent() {
           <div className="space-y-4">
             {issue.comments.map((comment) => (
               <Comment
-                _creationTime={comment._creationTime}
+                _creationTime={comment.createdAt.getTime()}
                 content={comment.body}
                 creatorUsername={comment.authorUsername}
-                key={comment._id}
+                key={comment.id}
                 type="comment"
               />
             ))}
@@ -205,7 +166,8 @@ function RouteComponent() {
             value={commentBody}
           />
           <div className="flex items-center justify-between gap-2">
-            {issue.canUpdate && (
+            {/* TODO: Check if user is the creator of the issue or the repository owner */}
+            {issue.creatorId === "" && (
               <Button
                 loading={updateIssueStatusMutation.isPending}
                 onClick={handleToggleStatus}

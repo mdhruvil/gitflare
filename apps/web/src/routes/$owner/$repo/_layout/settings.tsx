@@ -1,14 +1,15 @@
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "@gitvex/backend/convex/_generated/api";
-import type { Id } from "@gitvex/backend/convex/_generated/dataModel";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { AlertCircleIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import type { z } from "zod";
+import {
+  getRepoByOwnerAndNameOpts,
+  updateRepoFn,
+  updateRepoSchema,
+} from "@/api/repos";
 import { getSessionOptions } from "@/api/session";
 import { NotFoundComponent } from "@/components/404-components";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -26,35 +27,13 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchMutation } from "@/lib/auth-server";
-import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/$owner/$repo/_layout/settings")({
   component: RouteComponent,
   notFoundComponent: NotFoundComponent,
 });
 
-const formSchema = z.object({
-  description: z.string().optional(),
-  isPrivate: z.boolean(),
-});
-
-const updateRepoServerFn = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      repoId: z.string(),
-      description: z.string().optional(),
-      isPrivate: z.boolean(),
-    })
-  )
-  .handler(async ({ data }) => {
-    const resp = await fetchMutation(api.repositories.update, {
-      id: data.repoId as Id<"repositories">,
-      description: data.description,
-      isPrivate: data.isPrivate,
-    }).catch(handleAndThrowConvexError);
-    return resp;
-  });
+const formSchema = updateRepoSchema.omit({ id: true });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -62,7 +41,7 @@ function RouteComponent() {
   const { owner, repo } = Route.useParams();
 
   const { data: repository } = useSuspenseQuery(
-    convexQuery(api.repositories.getByOwnerAndName, {
+    getRepoByOwnerAndNameOpts({
       owner,
       name: repo,
     })
@@ -74,16 +53,16 @@ function RouteComponent() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     values: {
-      description: repository.description || "",
+      description: repository.description ?? "",
       isPrivate: repository.isPrivate,
     },
   });
 
   const updateRepoMutation = useMutation({
     mutationFn: async (values: FormValues) =>
-      await updateRepoServerFn({
+      await updateRepoFn({
         data: {
-          repoId: repository._id,
+          id: repository.id,
           description: values.description,
           isPrivate: values.isPrivate,
         },
@@ -92,11 +71,8 @@ function RouteComponent() {
       toast.success("Repository settings updated successfully!");
     },
     onError: (err) => {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to update repository settings";
-      toast.error(errorMessage);
+      console.error("Error updating repository:", err);
+      toast.error(err.message);
     },
   });
 

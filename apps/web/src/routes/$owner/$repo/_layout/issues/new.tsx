@@ -1,12 +1,11 @@
-import { api } from "@gitvex/backend/convex/_generated/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { AlertCircleIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { createIssueFn } from "@/api/issues";
 import { NotFoundComponent } from "@/components/404-components";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -21,8 +20,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchMutation } from "@/lib/auth-server";
-import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/$owner/$repo/_layout/issues/new")({
   component: RouteComponent,
@@ -39,28 +36,11 @@ const formSchema = z.object({
   }),
 });
 
-const createIssueServerFn = createServerFn({ method: "POST" })
-  .inputValidator(
-    formSchema.extend({
-      fullName: z.string(),
-    })
-  )
-  .handler(async ({ data }) => {
-    const issueId = await fetchMutation(api.issues.create, {
-      fullName: data.fullName,
-      title: data.title,
-      body: data.body.trim() || undefined,
-    }).catch(handleAndThrowConvexError);
-
-    return { issueId };
-  });
-
 type FormValues = z.infer<typeof formSchema>;
 
 function RouteComponent() {
   const navigate = useNavigate();
   const params = Route.useParams();
-  const fullName = `${params.owner}/${params.repo}`;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -72,10 +52,12 @@ function RouteComponent() {
 
   const createIssueMutation = useMutation({
     mutationFn: async (values: FormValues) =>
-      await createIssueServerFn({
+      await createIssueFn({
         data: {
-          ...values,
-          fullName,
+          body: values.body.trim() || "",
+          title: values.title,
+          owner: params.owner,
+          repo: params.repo,
         },
       }),
     onSuccess: () => {
@@ -90,16 +72,15 @@ function RouteComponent() {
       });
     },
     onError: (err) => {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to create issue";
-      toast.error(errorMessage);
+      console.error("Error creating issue:", err);
+      toast.error(err.message);
     },
   });
 
   const onSubmit = (values: FormValues) => {
     createIssueMutation.mutate({
-      ...values,
-      body: values.body.trim() || "",
+      title: values.title,
+      body: values.body,
     });
   };
 

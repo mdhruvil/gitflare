@@ -1,17 +1,11 @@
-import { env } from "cloudflare:workers";
-import { getCookieName } from "@convex-dev/better-auth/react-start";
-import { api } from "@gitvex/backend/convex/_generated/api";
-import { createAuth } from "@gitvex/backend/convex/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { getCookie } from "@tanstack/react-start/server";
-import { ConvexHttpClient } from "convex/browser";
 import { AlertCircleIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import type { z } from "zod";
+import { createRepoFn, createRepoSchema } from "@/api/repos";
 import { NotFoundComponent } from "@/components/404-components";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -34,73 +28,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { getRepoDOStub } from "@/do/repo";
-import { handleAndThrowConvexError } from "@/lib/convex";
 
 export const Route = createFileRoute("/_layout/new")({
   component: RouteComponent,
   notFoundComponent: NotFoundComponent,
 });
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, { message: "Repository name is required" })
-    .max(100, { message: "Repository name must be less than 100 characters" })
-    .regex(/^[a-zA-Z0-9_-]+$/, {
-      message:
-        "Repository name can only contain letters, numbers, hyphens, and underscores",
-    })
-    .refine((val) => val.endsWith(".git") === false, {
-      message: "Repository name cannot end with .git",
-    }),
-  description: z
-    .string()
-    .max(500, { message: "Description must be less than 500 characters" }),
-  isPrivate: z.boolean(),
-});
-
-const createClient = () => {
-  const sessionCookieName = getCookieName(createAuth);
-  const token = getCookie(sessionCookieName);
-  console.log({
-    sessionCookieName,
-    tokenExists: !!token,
-  });
-  const client = new ConvexHttpClient(env.VITE_CONVEX_URL);
-  if (token) {
-    console.log("Setting auth token in Convex client");
-    client.setAuth(token);
-  } else {
-    console.log("No auth token found in cookies");
-  }
-  return client;
-};
-
-const createRepoServerFn = createServerFn({ method: "POST" })
-  .inputValidator(formSchema)
-  .handler(async ({ data }) => {
-    const client = createClient();
-    const resp = await client
-      .mutation(api.repositories.create, {
-        name: data.name,
-        description: data.description.trim() || undefined,
-        isPrivate: data.isPrivate,
-      })
-      .catch(handleAndThrowConvexError);
-
-    const stub = getRepoDOStub(resp.fullName);
-    await stub.ensureRepoInitialized();
-    return resp;
-  });
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof createRepoSchema>;
 
 function RouteComponent() {
   const navigate = useNavigate();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(createRepoSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -110,7 +50,7 @@ function RouteComponent() {
 
   const createRepoMutation = useMutation({
     mutationFn: async (values: FormValues) =>
-      await createRepoServerFn({
+      await createRepoFn({
         data: values,
       }),
     onSuccess: ({ owner, name }) => {
@@ -125,9 +65,8 @@ function RouteComponent() {
       });
     },
     onError: (err) => {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to create repository";
-      toast.error(errorMessage);
+      console.error("Error creating repository:", err);
+      toast.error(err.message);
     },
   });
 

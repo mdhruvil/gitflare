@@ -1,5 +1,3 @@
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "@gitvex/backend/convex/_generated/api";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
@@ -18,6 +16,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import { z } from "zod";
+import { getRepoByOwnerAndNameOpts } from "@/api/repos";
 import { getBlobQueryOptions, getTreeQueryOptions } from "@/api/tree";
 import { NotFoundComponent } from "@/components/404-components";
 import { BranchSelector } from "@/components/branch-selector";
@@ -30,7 +29,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { handleAndThrowConvexError } from "@/lib/convex";
 
 const searchSchema = z.object({
   ref: z.string().optional(),
@@ -44,19 +42,17 @@ export const Route = createFileRoute("/$owner/$repo/_layout/")({
     ref: search.ref,
   }),
   loader: async ({ params, context: { queryClient }, deps, location }) => {
-    await queryClient
-      .ensureQueryData(
-        getTreeQueryOptions({
-          owner: params.owner,
-          repo: params.repo,
-          ref: deps.ref,
-          path: "",
-        })
-      )
-      .catch(handleAndThrowConvexError);
+    await queryClient.ensureQueryData(
+      getTreeQueryOptions({
+        owner: params.owner,
+        repo: params.repo,
+        ref: deps.ref,
+        path: "",
+      })
+    );
 
     return {
-      url: location.url,
+      url: location.url.toString(),
     };
   },
   pendingComponent: IndexPendingComponent,
@@ -96,7 +92,7 @@ function RouteComponent() {
   );
 
   const { data: repository } = useSuspenseQuery(
-    convexQuery(api.repositories.getByOwnerAndName, {
+    getRepoByOwnerAndNameOpts({
       owner,
       name: repo,
     })
