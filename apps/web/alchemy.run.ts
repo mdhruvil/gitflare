@@ -3,6 +3,7 @@ import {
   D1Database,
   DurableObjectNamespace,
   TanStackStart,
+  Worker,
 } from "alchemy/cloudflare";
 import { GitHubComment } from "alchemy/github";
 import { CloudflareStateStore } from "alchemy/state";
@@ -26,15 +27,26 @@ const db = await D1Database("gitflare-db", {
   migrationsDir: "./migrations",
 });
 
+const isPreview = !!process.env.PULL_REQUEST;
 const isProd = app.stage === "prod";
+
+function getCurrentUrl() {
+  if (isProd) {
+    return PROD_URL;
+  }
+  if (isPreview) {
+    return Worker.DevUrl;
+  }
+  return LOCAL_URL;
+}
 
 export const web = await TanStackStart("web", {
   bindings: {
     REPO: repoDO,
     DB: db,
     LOG_LEVEL: isProd ? "warn" : "debug",
-    SITE_URL: isProd ? PROD_URL : LOCAL_URL,
-    VITE_BETTER_AUTH_URL: isProd ? PROD_URL : LOCAL_URL,
+    SITE_URL: getCurrentUrl(),
+    VITE_BETTER_AUTH_URL: getCurrentUrl(),
   },
   domains: [PROD_DOMAIN],
 });
