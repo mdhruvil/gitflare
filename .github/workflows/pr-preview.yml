@@ -19,16 +19,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - &a1
+        name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: "10"
+      - &a2
         name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: pnpm
-      - &a2
-        name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: "10"
       - &a3
         name: Install dependencies
         shell: bash

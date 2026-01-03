@@ -39,10 +39,6 @@ export const web = await TanStackStart("web", {
   domains: [PROD_DOMAIN],
 });
 
-console.log({
-  url: web.url,
-});
-
 if (process.env.PULL_REQUEST) {
   const previewUrl = web.url;
 
