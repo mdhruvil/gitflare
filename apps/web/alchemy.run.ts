@@ -47,7 +47,7 @@ export const web = await TanStackStart("web", {
     LOG_LEVEL: isProd ? "warn" : "debug",
     SITE_URL: getCurrentUrl(),
     VITE_BETTER_AUTH_URL: getCurrentUrl(),
-    BETTER_AUTH_SECRET: alchemy.secret(process.env.BETTER_AUTH_SECRET),
+    BETTER_AUTH_SECRET: alchemy.secret(alchemy.env.BETTER_AUTH_SECRET),
   },
   domains: isProd ? [PROD_DOMAIN] : [],
 });
