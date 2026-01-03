@@ -5,11 +5,12 @@
   "scripts": {
     "build": "vite build",
     "serve": "vite preview",
-    "dev": "vite dev",
-    "deploy": "wrangler deploy --outdir dist --upload-source-maps --var SENTRY_RELEASE:$(sentry-cli releases propose-version)",
+    "dev": "alchemy dev",
+    "deploy": "alchemy deploy",
+    "destroy": "alchemy destroy",
     "cf-typegen": "wrangler types --env-interface Env",
     "sentry:sourcemaps": "_SENTRY_RELEASE=$(sentry-cli releases propose-version) && sentry-cli releases new $_SENTRY_RELEASE --org=mdhruvil --project=gitvex-workers && sentry-cli sourcemaps upload --org=mdhruvil --project=gitvex-workers --release=$_SENTRY_RELEASE --strip-prefix 'dist/..' dist",
-    "postdeploy": "pnpm sentry:sourcemaps",
+    "postdeploy:noop": "pnpm sentry:sourcemaps",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply DB",
     "db:migrate:remote": "wrangler d1 migrations apply DB --remote"
@@ -39,6 +40,8 @@
     "@tanstack/react-router-with-query": "^1.130.17",
     "@tanstack/react-start": "^1.145.3",
     "@tanstack/router-plugin": "^1.145.2",
+    "alchemy": "catalog:",
+    "libsodium": "^0.7.16",
     "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -68,6 +71,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.17.1",
+    "@cloudflare/workers-types": "^4.20260103.0",
     "@sentry/cli": "^2.58.4",
     "@tanstack/react-router-devtools": "^1.144.0",
     "@testing-library/dom": "^10.4.1",

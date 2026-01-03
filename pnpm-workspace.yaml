@@ -3,6 +3,7 @@ packages:
   - packages/*
 
 catalog:
+  alchemy: ^0.82.2
   better-auth: ^1.4.9
   typescript: ^5.9.3
 
