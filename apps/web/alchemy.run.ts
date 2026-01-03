@@ -40,6 +40,9 @@ function getCurrentUrl() {
   return LOCAL_URL;
 }
 
+console.log(`Hello wassup from ${getCurrentUrl()}`);
+console.log(`Cloudflare Email: ${process.env.CLOUDFLARE_EMAIL}`);
+
 export const web = await TanStackStart("web", {
   bindings: {
     REPO: repoDO,
