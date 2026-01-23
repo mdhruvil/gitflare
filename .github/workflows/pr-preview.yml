@@ -25,18 +25,14 @@ env:
   # App Secrets
   BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
 jobs:
-  deploy-preview:
+  ci:
     if: ${{ github.event.action != 'closed' }}
     runs-on: ubuntu-latest
-    # Requires approval for external contributors (configured in repo Settings → Environments)
-    environment: preview
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
-          # Checkout the PR head commit (safe after environment approval)
           ref: ${{ github.event.pull_request.head.sha }}
       - &a1
         name: Setup pnpm
@@ -53,6 +49,29 @@ jobs:
         name: Install dependencies
         shell: bash
         run: pnpm install
+      - name: Lint
+        run: pnpm check
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+  deploy-preview:
+    needs: [ci]
+    if: ${{ github.event.action != 'closed' }}
+    runs-on: ubuntu-latest
+    # Requires approval for external contributors (configured in repo Settings → Environments)
+    environment: preview
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Checkout the PR head commit (safe after environment approval)
+          ref: ${{ github.event.pull_request.head.sha }}
+      - *a1
+      - *a2
+      - *a3
       - name: Deploy Preview
         run: pnpm --filter ./apps/web run deploy
   cleanup-preview:
