@@ -345,8 +345,7 @@ export class PackfileParser {
     let bufferSize = Math.max(expectedSize * 2, 256);
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-      // ensure() may return false at EOF, but we still try with available data
-      await this.buffer.ensure(bufferSize);
+      const hasMore = await this.buffer.ensure(bufferSize);
 
       const available = this.buffer.peek(bufferSize);
       if (available.length === 0) {
@@ -363,10 +362,8 @@ export class PackfileParser {
         this.buffer.consume(result.engine.bytesWritten);
         return Result.ok(new Uint8Array(result.buffer));
       } catch (err) {
-        if (
-          this.buffer.bytesRead + bufferSize >=
-          this._progress.bytesRead + bufferSize * 2
-        ) {
+        // EOF and still failing - no point retrying
+        if (!hasMore) {
           return Result.err(
             err instanceof Error ? err : new Error(String(err))
           );
