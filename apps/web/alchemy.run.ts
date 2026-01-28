@@ -2,6 +2,7 @@ import alchemy from "alchemy";
 import {
   D1Database,
   DurableObjectNamespace,
+  R2Bucket,
   TanStackStart,
   Worker,
 } from "alchemy/cloudflare";
@@ -27,6 +28,10 @@ const hybridRepoDO = DurableObjectNamespace("hybrid-repos", {
   sqlite: true,
 });
 
+const bucket = await R2Bucket("gitflare-bucket", {
+  name: "gitflare-bucket",
+});
+
 const db = await D1Database("gitflare-db", {
   name: "gitflare-db",
   migrationsDir: "./migrations",
@@ -49,6 +54,7 @@ export const web = await TanStackStart("web", {
   bindings: {
     REPO: repoDO,
     HYBRID_REPO: hybridRepoDO,
+    BUCKET: bucket,
     DB: db,
     LOG_LEVEL: isProd ? "warn" : "debug",
     SITE_URL: getCurrentUrl(),
