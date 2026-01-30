@@ -26,4 +26,3 @@ export default Sentry.withSentry(
 
 // biome-ignore lint/performance/noBarrelFile: <needed for Durable Object export>
 export { HybridRepo } from "./do/hybrid-repo";
-export { Repo } from "./do/repo";

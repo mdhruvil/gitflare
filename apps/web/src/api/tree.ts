@@ -1,10 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
-import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { createHighlighter } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import * as z from "zod";
-import { getRepoDOStub } from "@/do/repo";
 import { getLanguageFromFilename } from "@/lib/utils";
 
 // Create highlighter instance with JavaScript regex engine
@@ -16,6 +14,21 @@ const highlighterPromise = createHighlighter({
   }),
 });
 
+type TreeEntry = {
+  oid: string;
+  path: string;
+  type: "tree" | "blob";
+  lastCommit?: {
+    oid: string;
+    commit: {
+      message: string;
+      committer: {
+        timestamp: number;
+      };
+    };
+  };
+};
+
 export const getTreeFnSchema = z.object({
   owner: z.string(),
   repo: z.string(),
@@ -25,14 +38,35 @@ export const getTreeFnSchema = z.object({
 
 export const getTreeFn = createServerFn({ method: "GET" })
   .inputValidator(getTreeFnSchema)
-  .handler(async ({ data }) => {
-    const fullName = `${data.owner}/${data.repo}`;
-    const stub = getRepoDOStub(fullName);
-    const tree = await stub.getTree({
-      ref: data.ref,
-      path: data.path,
-    });
-    return tree;
+  .handler(async ({ data }): Promise<TreeEntry[]> => {
+    // TODO: Implement actual tree fetching from HybridRepo DO
+    console.log("getTree called for:", data.owner, data.repo);
+    return [
+      {
+        oid: "abc123def456",
+        path: "src",
+        type: "tree",
+        lastCommit: {
+          oid: "commit123",
+          commit: {
+            message: "Initial commit",
+            committer: { timestamp: Date.now() / 1000 },
+          },
+        },
+      },
+      {
+        oid: "def456abc789",
+        path: "README.md",
+        type: "blob",
+        lastCommit: {
+          oid: "commit123",
+          commit: {
+            message: "Initial commit",
+            committer: { timestamp: Date.now() / 1000 },
+          },
+        },
+      },
+    ];
   });
 
 export const getTreeQueryOptions = (data: z.infer<typeof getTreeFnSchema>) =>
@@ -53,53 +87,26 @@ export const getBlobFnSchema = z.object({
 export const getBlobFn = createServerFn({ method: "GET" })
   .inputValidator(getBlobFnSchema)
   .handler(async ({ data }) => {
-    const fullName = `${data.owner}/${data.repo}`;
-    const stub = getRepoDOStub(fullName);
-    const blob = await stub.getBlob({
-      ref: data.ref,
-      filepath: data.filepath,
-    });
-
-    if (!blob) {
-      throw notFound();
-    }
-
-    // WE HAVE TO DO THIS BECAUSE OF CACHE SERIALIZATION ISSUES (TODO: REFACTOR)
-    // Handle blob.content which might be a Uint8Array or a plain object from JSON serialization
-    let contentBuffer: Buffer;
-    if (blob.content instanceof Uint8Array) {
-      contentBuffer = Buffer.from(blob.content);
-    } else if (typeof blob.content === "object" && blob.content !== null) {
-      // Handle JSON-serialized Uint8Array (object with numeric keys)
-      contentBuffer = Buffer.from(Object.values(blob.content) as number[]);
-    } else {
-      contentBuffer = Buffer.from(blob.content as string);
-    }
-
-    const contentBase64 = contentBuffer.toString("base64");
-
-    // Check if it's markdown
+    // TODO: Implement actual blob fetching from HybridRepo DO
     const filename = data.filepath.split("/").pop() || data.filepath;
     const isMarkdown = filename.toLowerCase().match(/\.(md|mdx|markdown)$/);
 
-    // Generate syntax-highlighted HTML for non-binary, non-markdown files
+    const dummyContent = `# ${data.repo}\n\nThis is a placeholder README for ${data.owner}/${data.repo}.`;
+    const contentBuffer = Buffer.from(dummyContent);
+    const contentBase64 = contentBuffer.toString("base64");
+
     let highlightedHtml: string | null = null;
-    if (!blob.isBinary && !isMarkdown) {
+    if (!isMarkdown) {
       const language = getLanguageFromFilename(filename);
       const highlighter = await highlighterPromise;
-
-      // Decode content for highlighting
-      const decoder = new TextDecoder("utf-8");
-      const content = decoder.decode(contentBuffer);
 
       try {
         await highlighter.loadLanguage(language);
       } catch {
-        // Language not found, will use no highlighting
         console.warn(`Language "${language}" not found for file "${filename}"`);
       }
 
-      highlightedHtml = highlighter.codeToHtml(content, {
+      highlightedHtml = highlighter.codeToHtml(dummyContent, {
         lang: language,
         theme: "github-dark-default",
         transformers: [
@@ -113,10 +120,10 @@ export const getBlobFn = createServerFn({ method: "GET" })
     }
 
     return {
-      oid: blob.oid,
+      oid: "dummy-blob-oid-123",
       content: contentBase64,
-      size: blob.size,
-      isBinary: blob.isBinary,
+      size: contentBuffer.length,
+      isBinary: false,
       highlightedHtml,
     };
   });

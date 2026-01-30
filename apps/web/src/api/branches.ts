@@ -1,7 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
-import { getRepoDOStub } from "@/do/repo";
 
 export const getBrancesFnSchema = z.object({
   owner: z.string(),
@@ -11,12 +10,11 @@ export const getBrancesFnSchema = z.object({
 export const getBranchesFn = createServerFn({ method: "GET" })
   .inputValidator(getBrancesFnSchema)
   .handler(async ({ data }) => {
-    const fullName = `${data.owner}/${data.repo}`;
-    const stub = getRepoDOStub(fullName);
-    const result = await stub.getBranches();
+    // TODO: Implement actual branch fetching from HybridRepo DO
+    console.log("getBranches called for:", data.owner, data.repo);
     return {
-      branches: result.branches,
-      currentBranch: result.currentBranch,
+      branches: ["main"],
+      currentBranch: "main",
     };
   });
 

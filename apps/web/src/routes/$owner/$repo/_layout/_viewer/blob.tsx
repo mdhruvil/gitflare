@@ -101,6 +101,7 @@ function RouteComponent() {
     } catch (error) {
       // If UTF-8 decoding fails, fall back to treating as binary
       console.error("Failed to decode file content as UTF-8:", error);
+      // @ts-expect-error dummy data
       blob.isBinary = true;
     }
   }

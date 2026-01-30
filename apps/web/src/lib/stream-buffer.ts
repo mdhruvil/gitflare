@@ -14,6 +14,7 @@ export class StreamBuffer {
   private readonly chunks: Uint8Array[] = [];
   private totalLength = 0;
   private position = 0;
+  private absolutePosition = 0;
   private readonly reader: ReadableStreamDefaultReader<Uint8Array>;
   private done = false;
   private readonly onData: ((chunk: Uint8Array) => void) | null;
@@ -26,9 +27,9 @@ export class StreamBuffer {
     this.onData = options?.onData ?? null;
   }
 
-  /** Total bytes consumed so far */
+  /** Total bytes consumed so far (monotonically increasing) */
   get bytesRead(): number {
-    return this.position;
+    return this.absolutePosition;
   }
 
   /**
@@ -115,7 +116,9 @@ export class StreamBuffer {
     }
 
     if (advance) {
+      const bytesConsumed = localPosition - this.position;
       this.position = localPosition;
+      this.absolutePosition += bytesConsumed;
       this.compactIfNeeded();
     }
 

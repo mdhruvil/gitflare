@@ -1,7 +1,26 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
-import { getRepoDOStub } from "@/do/repo";
+
+type Commit = {
+  oid: string;
+  commit: {
+    message: string;
+    author: {
+      name: string;
+      email: string;
+      timestamp: number;
+    };
+    parent: string[];
+  };
+};
+
+type FileChange = {
+  path: string;
+  type: "add" | "remove" | "modify";
+  old?: { content: string; isBinary: boolean };
+  new?: { content: string; isBinary: boolean };
+};
 
 export const getCommitFnSchema = z.object({
   owner: z.string(),
@@ -12,14 +31,23 @@ export const getCommitFnSchema = z.object({
 
 export const getCommitsFn = createServerFn({ method: "GET" })
   .inputValidator(getCommitFnSchema)
-  .handler(async ({ data }) => {
-    const fullName = `${data.owner}/${data.repo}`;
-    const stub = getRepoDOStub(fullName);
-    const commits = await stub.getCommits({
-      depth: data.limit,
-      ref: data.ref,
-    });
-    return commits;
+  .handler(async ({ data }): Promise<Commit[]> => {
+    // TODO: Implement actual commit fetching from HybridRepo DO
+    console.log("getCommits called for:", data.owner, data.repo);
+    return [
+      {
+        oid: "abc123def456789",
+        commit: {
+          message: "Initial commit",
+          author: {
+            name: "Demo User",
+            email: "demo@example.com",
+            timestamp: Date.now() / 1000,
+          },
+          parent: [],
+        },
+      },
+    ];
   });
 
 export const getCommitsQueryOptions = (
@@ -40,15 +68,38 @@ export const getCommitSchema = z.object({
 
 export const getCommitFn = createServerFn({ method: "GET" })
   .inputValidator(getCommitSchema)
-  .handler(async ({ data }) => {
-    const fullName = `${data.owner}/${data.repo}`;
-    const stub = getRepoDOStub(fullName);
-    const { commit, changes } = await stub.getCommit(data.commitOid);
-    return {
-      commit,
-      changes,
-    };
-  });
+  .handler(
+    async ({ data }): Promise<{ commit: Commit; changes: FileChange[] }> => {
+      // TODO: Implement actual commit fetching from HybridRepo DO
+      console.log(
+        "getCommit called for:",
+        data.owner,
+        data.repo,
+        data.commitOid
+      );
+      return {
+        commit: {
+          oid: data.commitOid,
+          commit: {
+            message: "Initial commit",
+            author: {
+              name: "Demo User",
+              email: "demo@example.com",
+              timestamp: Date.now() / 1000,
+            },
+            parent: [],
+          },
+        },
+        changes: [
+          {
+            path: "README.md",
+            type: "add",
+            new: { content: "# Hello World", isBinary: false },
+          },
+        ],
+      };
+    }
+  );
 
 export const getCommitQueryOptions = (data: z.infer<typeof getCommitSchema>) =>
   queryOptions({

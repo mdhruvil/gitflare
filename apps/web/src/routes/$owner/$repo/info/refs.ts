@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { advertiseCapabilities } from "@/git/protocol";
-import { verifyAuth } from "@/lib/git-auth";
+import { getHybridRepoDOStub } from "@/do/hybrid-repo";
 
 export const Route = createFileRoute("/$owner/$repo/info/refs")({
   server: {
@@ -16,26 +15,26 @@ export const Route = createFileRoute("/$owner/$repo/info/refs")({
         const { repo, owner } = params;
         const repoName = repo.endsWith(".git") ? repo.slice(0, -4) : repo;
 
-        // Verify authentication (allows anonymous for public repos on read)
-        const isAuthorized = await verifyAuth({
-          owner,
-          repo: repoName,
-          req: request,
-          service:
-            service === "git-upload-pack" ? "upload-pack" : "receive-pack",
-        });
+        // // Verify authentication (allows anonymous for public repos on read)
+        // const isAuthorized = await verifyAuth({
+        //   owner,
+        //   repo: repoName,
+        //   req: request,
+        //   service:
+        //     service === "git-upload-pack" ? "upload-pack" : "receive-pack",
+        // });
 
-        if (!isAuthorized) {
-          return new Response("Unauthorized", {
-            status: 401,
-            headers: {
-              "WWW-Authenticate": 'Basic realm="Git"',
-            },
-          });
-        }
+        // if (!isAuthorized) {
+        //   return new Response("Unauthorized", {
+        //     status: 401,
+        //     headers: {
+        //       "WWW-Authenticate": 'Basic realm="Git"',
+        //     },
+        //   });
+        // }
 
-        const fullRepoName = `${owner}/${repoName}`;
-        return advertiseCapabilities(service, fullRepoName);
+        const stub = getHybridRepoDOStub(`${owner}/${repoName}`);
+        return stub.fetch(`https://do/info/refs?service=${service}`);
       },
     },
   },

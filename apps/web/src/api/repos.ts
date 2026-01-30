@@ -4,7 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import * as z from "zod";
 import { Repo } from "@/db/repo";
-import { getRepoDOStub } from "@/do/repo";
+import { getHybridRepoDOStub } from "@/do/hybrid-repo";
 import { auth } from "@/lib/auth";
 import { NotFoundError, UnauthorizedError } from "@/lib/errors";
 import { Result } from "@/lib/result";
@@ -114,8 +114,8 @@ export const createRepoFn = createServerFn({
 
     const fullName = `${repo.owner}/${repo.name}`;
 
-    const stub = getRepoDOStub(fullName);
-    await stub.ensureRepoInitialized();
+    const stub = getHybridRepoDOStub(fullName);
+    await stub.initRepo();
 
     return repo;
   });
