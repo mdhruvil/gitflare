@@ -56,3 +56,9 @@ export const gitRefs = sqliteTable("git_refs", {
     .$onUpdate(() => new Date())
     .notNull(),
 });
+
+export const commitGraph = sqliteTable("commit_graph", {
+  oid: text("oid").primaryKey(),
+  treeOid: text("tree_oid").notNull(),
+  parentOids: text("parent_oids", { mode: "json" }).$type<string[]>().notNull(),
+});

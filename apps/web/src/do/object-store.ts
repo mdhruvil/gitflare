@@ -20,6 +20,20 @@ import * as schema from "./schema/git";
 const MAX_DELTA_DEPTH = 50;
 
 /**
+ * Get the length of a packfile object header.
+ *
+ * Header format: first byte has type in bits 4-6, size bits 0-3 in bits 0-3.
+ * If bit 7 is set, more bytes follow (each contributing 7 bits to size).
+ */
+function getObjectHeaderLength(data: Uint8Array): number {
+  let len = 1;
+  while (len < data.length && (data[len - 1] & 0x80) !== 0) {
+    len += 1;
+  }
+  return len;
+}
+
+/**
  * Maximum gap between objects to coalesce into a single R2 range request.
  * If two objects in the same pack are within this gap, fetch them together.
  */
@@ -38,7 +52,8 @@ export type ObjectStoreErrorCode =
   | "DELTA_ERROR"
   | "CYCLE_DETECTED"
   | "DELTA_DEPTH_EXCEEDED"
-  | "DB_ERROR";
+  | "DB_ERROR"
+  | "BATCH_ERROR";
 
 export class ObjectStoreError extends TaggedError("ObjectStoreError")<{
   code: ObjectStoreErrorCode;
@@ -76,6 +91,50 @@ type CoalescedRange = {
     oid: string;
     relativeOffset: number;
     compressedSize: number;
+    isDelta: boolean;
+  }>;
+};
+
+/**
+ * Object metadata from git_object_index with pack location info.
+ */
+export type ObjectIndexEntry = {
+  oid: string;
+  type: GitObjectType;
+  packId: string;
+  packOffset: number;
+  compressedSize: number;
+  isDelta: boolean;
+  baseOid: string | null;
+};
+
+/**
+ * Batch read entry with pack and R2 info for coalescing.
+ * Includes R2 key so we can group by packfile without additional DB lookups.
+ */
+export type BatchEntry = {
+  oid: string;
+  type: GitObjectType;
+  packId: string;
+  packOffset: number;
+  compressedSize: number;
+  isDelta: boolean;
+  baseOid: string | null;
+  r2Key: string;
+};
+
+/**
+ * Coalesced range for batch reading (includes type info for each object).
+ */
+type BatchCoalescedRange = {
+  r2Key: string;
+  offset: number;
+  length: number;
+  objects: Array<{
+    oid: string;
+    type: GitObjectType;
+    relativeOffset: number;
+    compressedSize: number;
   }>;
 };
 
@@ -94,6 +153,73 @@ export class ObjectStore {
       columns: { oid: true },
     });
     return result !== undefined;
+  }
+
+  /**
+   * Get batch entries for a list of OIDs with R2 keys.
+   * Used by upload-pack to prepare objects for readBatch().
+   *
+   * Objects are returned ordered by packId, packOffset for optimal R2 access.
+   * Batches queries to avoid SQLite statement length limits.
+   */
+  getBatchEntries(oids: string[]): BatchEntry[] {
+    if (oids.length === 0) {
+      return [];
+    }
+
+    type Row = {
+      oid: string;
+      type: string;
+      pack_id: string;
+      pack_offset: number;
+      compressed_size: number;
+      is_delta: number;
+      base_oid: string | null;
+      r2_key: string;
+    };
+
+    const allRows: Row[] = [];
+    const BATCH_SIZE = 100; // SQLite limits bound parameters to 999
+
+    // Query in batches to avoid SQLite statement length limits
+    for (let i = 0; i < oids.length; i += BATCH_SIZE) {
+      const batch = oids.slice(i, i + BATCH_SIZE);
+      const rows = this.db.all<Row>(sql`
+        SELECT 
+          o.oid,
+          o.type,
+          o.pack_id,
+          o.pack_offset,
+          o.compressed_size,
+          o.is_delta,
+          o.base_oid,
+          p.r2_key
+        FROM git_object_index o
+        JOIN git_packs p ON o.pack_id = p.pack_id
+        WHERE o.oid IN (${sql.join(
+          batch.map((oid) => sql`${oid}`),
+          sql`, `
+        )})
+      `);
+      allRows.push(...rows);
+    }
+
+    // Sort by pack_id, pack_offset for optimal R2 access
+    allRows.sort((a, b) => {
+      if (a.pack_id !== b.pack_id) return a.pack_id.localeCompare(b.pack_id);
+      return a.pack_offset - b.pack_offset;
+    });
+
+    return allRows.map((row) => ({
+      oid: row.oid,
+      type: row.type as GitObjectType,
+      packId: row.pack_id,
+      packOffset: row.pack_offset,
+      compressedSize: row.compressed_size,
+      isDelta: row.is_delta === 1,
+      baseOid: row.base_oid,
+      r2Key: row.r2_key,
+    }));
   }
 
   /**
@@ -203,6 +329,7 @@ export class ObjectStore {
               oid: row.oid,
               relativeOffset: row.pack_offset - currentRange.offset,
               compressedSize: row.compressed_size,
+              isDelta: row.is_delta === 1,
             });
           } else {
             // Gap too large: finalize current range, start new one
@@ -216,6 +343,7 @@ export class ObjectStore {
                   oid: row.oid,
                   relativeOffset: 0,
                   compressedSize: row.compressed_size,
+                  isDelta: row.is_delta === 1,
                 },
               ],
             };
@@ -231,6 +359,7 @@ export class ObjectStore {
                 oid: row.oid,
                 relativeOffset: 0,
                 compressedSize: row.compressed_size,
+                isDelta: row.is_delta === 1,
               },
             ],
           };
@@ -285,10 +414,18 @@ export class ObjectStore {
         const { range, buffer } = yield* result;
 
         for (const obj of range.objects) {
-          const compressedData = buffer.subarray(
+          const entryData = buffer.subarray(
             obj.relativeOffset,
             obj.relativeOffset + obj.compressedSize
           );
+
+          // Skip the variable-length type+size header to get to zlib data
+          // For ref_delta objects, also skip the 20-byte base OID
+          let headerLen = getObjectHeaderLength(entryData);
+          if (obj.isDelta) {
+            headerLen += 20; // ref_delta has 20-byte base hash after header
+          }
+          const compressedData = entryData.subarray(headerLen);
 
           const decompressed = yield* Result.try({
             try: () => inflateSync(compressedData),
@@ -423,5 +560,223 @@ export class ObjectStore {
         });
       }.bind(this)
     );
+  }
+
+  /**
+   * Read multiple objects in batch with packfile-aware coalescing.
+   *
+   * Objects are grouped by packfile and sorted by offset to minimize R2 requests.
+   * Nearby objects within COALESCE_GAP_THRESHOLD are fetched in single range requests.
+   *
+   * Calls onObject for each resolved object (allows streaming without holding all in memory).
+   * Objects with delta chains are fully resolved before being emitted.
+   *
+   * @param entries - Object metadata with pack location info (from object-walk)
+   * @param onObject - Callback for each resolved object
+   * @returns Count of successfully processed objects
+   */
+  async readBatch(
+    entries: BatchEntry[],
+    onObject: (obj: ResolvedObject) => Promise<void>
+  ): Promise<Result<number, ObjectStoreError>> {
+    if (entries.length === 0) {
+      return Result.ok(0);
+    }
+
+    // Separate delta and non-delta objects
+    const nonDeltas: BatchEntry[] = [];
+    const deltas: BatchEntry[] = [];
+
+    for (const entry of entries) {
+      if (entry.isDelta) {
+        deltas.push(entry);
+      } else {
+        nonDeltas.push(entry);
+      }
+    }
+
+    let processed = 0;
+
+    // Process non-delta objects in coalesced batches
+    const nonDeltaResult = await this.readBatchNonDelta(nonDeltas, onObject);
+    if (nonDeltaResult.isErr()) {
+      return nonDeltaResult;
+    }
+    processed += nonDeltaResult.value;
+
+    // Process delta objects individually (need full chain resolution)
+    for (const entry of deltas) {
+      const result = await this.read(entry.oid);
+      if (result.isErr()) {
+        return Result.err(
+          new ObjectStoreError({
+            code: "BATCH_ERROR",
+            message: `Failed to resolve delta object: ${result.error.message}`,
+            oid: entry.oid,
+          })
+        );
+      }
+      await onObject(result.value);
+      processed += 1;
+    }
+
+    return Result.ok(processed);
+  }
+
+  /**
+   * Read non-delta objects in coalesced batches.
+   */
+  private async readBatchNonDelta(
+    entries: BatchEntry[],
+    onObject: (obj: ResolvedObject) => Promise<void>
+  ): Promise<Result<number, ObjectStoreError>> {
+    if (entries.length === 0) {
+      return Result.ok(0);
+    }
+
+    // Build coalesced ranges grouped by packfile
+    const ranges = this.buildBatchCoalescedRanges(entries);
+    let processed = 0;
+
+    // Process each range
+    for (const range of ranges) {
+      const r2Result = await this.r2.get(range.r2Key, {
+        range: {
+          offset: range.offset,
+          length: range.length,
+        },
+      });
+
+      if (r2Result.isErr()) {
+        return Result.err(
+          new ObjectStoreError({
+            code: "R2_ERROR",
+            message: `R2 error for range at ${range.r2Key}:${range.offset}: ${r2Result.error.message}`,
+            oid: range.objects[0]?.oid ?? "unknown",
+          })
+        );
+      }
+
+      const buffer = new Uint8Array(await r2Result.value.arrayBuffer());
+
+      // Extract and decompress each object in the range
+      for (const obj of range.objects) {
+        const entryData = buffer.subarray(
+          obj.relativeOffset,
+          obj.relativeOffset + obj.compressedSize
+        );
+
+        // Skip the variable-length type+size header to get to zlib data
+        const headerLen = getObjectHeaderLength(entryData);
+        const compressedData = entryData.subarray(headerLen);
+
+        let decompressed: Uint8Array;
+        try {
+          decompressed = inflateSync(compressedData);
+        } catch (cause) {
+          return Result.err(
+            new ObjectStoreError({
+              code: "DECOMPRESS_ERROR",
+              message: `Decompression error for "${obj.oid}": ${String(cause)}`,
+              oid: obj.oid,
+            })
+          );
+        }
+
+        await onObject({
+          oid: obj.oid,
+          type: obj.type,
+          data: decompressed,
+        });
+        processed += 1;
+      }
+    }
+
+    return Result.ok(processed);
+  }
+
+  /**
+   * Build coalesced ranges for batch reading.
+   * Groups entries by R2 key and merges nearby objects into single range requests.
+   */
+  private buildBatchCoalescedRanges(
+    entries: BatchEntry[]
+  ): BatchCoalescedRange[] {
+    // Group by r2Key (packfile)
+    const byR2Key = new Map<string, BatchEntry[]>();
+    for (const entry of entries) {
+      const existing = byR2Key.get(entry.r2Key);
+      if (existing) {
+        existing.push(entry);
+      } else {
+        byR2Key.set(entry.r2Key, [entry]);
+      }
+    }
+
+    const ranges: BatchCoalescedRange[] = [];
+
+    for (const [r2Key, packEntries] of byR2Key) {
+      // Sort by pack_offset for sequential access
+      packEntries.sort((a, b) => a.packOffset - b.packOffset);
+
+      let currentRange: BatchCoalescedRange | null = null;
+
+      for (const entry of packEntries) {
+        const entryEnd = entry.packOffset + entry.compressedSize;
+
+        if (currentRange) {
+          const currentEnd = currentRange.offset + currentRange.length;
+          const gap = entry.packOffset - currentEnd;
+
+          if (gap <= COALESCE_GAP_THRESHOLD) {
+            // Coalesce: extend current range
+            currentRange.length = entryEnd - currentRange.offset;
+            currentRange.objects.push({
+              oid: entry.oid,
+              type: entry.type,
+              relativeOffset: entry.packOffset - currentRange.offset,
+              compressedSize: entry.compressedSize,
+            });
+          } else {
+            // Gap too large: finalize current range, start new one
+            ranges.push(currentRange);
+            currentRange = {
+              r2Key,
+              offset: entry.packOffset,
+              length: entry.compressedSize,
+              objects: [
+                {
+                  oid: entry.oid,
+                  type: entry.type,
+                  relativeOffset: 0,
+                  compressedSize: entry.compressedSize,
+                },
+              ],
+            };
+          }
+        } else {
+          // Start new range
+          currentRange = {
+            r2Key,
+            offset: entry.packOffset,
+            length: entry.compressedSize,
+            objects: [
+              {
+                oid: entry.oid,
+                type: entry.type,
+                relativeOffset: 0,
+                compressedSize: entry.compressedSize,
+              },
+            ],
+          };
+        }
+      }
+
+      if (currentRange) {
+        ranges.push(currentRange);
+      }
+    }
+
+    return ranges;
   }
 }

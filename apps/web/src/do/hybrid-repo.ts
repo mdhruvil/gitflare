@@ -6,8 +6,10 @@ import {
 } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { handleReceivePack } from "@/git/handlers/receive-pack";
+import { handleUploadPackV2 } from "@/git/handlers/upload-pack";
 import { advertiseReceivePackCapabilities } from "@/git/protocol/capabilities";
 import { parseReceivePackRequest } from "@/git/protocol/receive-pack";
+import { advertiseV2Capabilities } from "@/git/protocol/upload-pack-v2";
 import {
   gitErrorResponse,
   gitResponse,
@@ -33,6 +35,8 @@ type DB = DrizzleSqliteDODatabase<typeof gitSchema>;
 
 type Storage = {
   fullName: string;
+  objectCount: number;
+  lastPushAt: number;
 };
 
 export class HybridRepo extends DurableObject<Env> {
@@ -103,17 +107,21 @@ export class HybridRepo extends DurableObject<Env> {
     const url = new URL(request.url);
 
     if (url.pathname === "/info/refs" && request.method === "GET") {
-      return this.routeInfoRefs(url);
+      return this.routeInfoRefs(request, url);
     }
 
     if (url.pathname === "/git-receive-pack" && request.method === "POST") {
       return this.routeReceivePack(request);
     }
 
+    if (url.pathname === "/git-upload-pack" && request.method === "POST") {
+      return this.routeUploadPack(request);
+    }
+
     return new Response("Not Found", { status: 404 });
   }
 
-  private async routeInfoRefs(url: URL): Promise<Response> {
+  private async routeInfoRefs(_request: Request, url: URL): Promise<Response> {
     const service = url.searchParams.get("service");
 
     if (service === "git-receive-pack") {
@@ -124,7 +132,11 @@ export class HybridRepo extends DurableObject<Env> {
     }
 
     if (service === "git-upload-pack") {
-      return new Response("upload-pack not yet implemented", { status: 501 });
+      return gitResponse(
+        advertiseV2Capabilities(),
+        "upload-pack",
+        "advertisement"
+      );
     }
 
     return new Response("Unknown service", { status: 400 });
@@ -148,6 +160,15 @@ export class HybridRepo extends DurableObject<Env> {
             refs: this.refs,
             indexer: this.indexer,
             repoPath: this.fullName,
+            onIndexed: async (objectCount) => {
+              const prevCount =
+                (await this.typedStorage.get("objectCount")) ?? 0;
+              await this.typedStorage.put(
+                "objectCount",
+                prevCount + objectCount
+              );
+              await this.typedStorage.put("lastPushAt", Date.now());
+            },
           },
           parsed,
           useSideband
@@ -192,5 +213,45 @@ export class HybridRepo extends DurableObject<Env> {
 
   async initRepo(): Promise<void> {
     await this.refs.setSymbolic("HEAD", "refs/heads/main");
+  }
+
+  /**
+   * Detect protocol version from Git-Protocol header.
+   */
+  private getProtocolVersion(request: Request): 1 | 2 {
+    const proto = request.headers.get("Git-Protocol");
+    console.log("Git-Protocol header:", proto);
+    if (proto?.includes("version=2")) return 2;
+    return 1;
+  }
+
+  /**
+   * Route POST /git-upload-pack requests (protocol v2 only).
+   */
+  private async routeUploadPack(request: Request): Promise<Response> {
+    const version = this.getProtocolVersion(request);
+    if (version !== 2) {
+      return new Response("Protocol version 2 required", { status: 400 });
+    }
+
+    if (!request.body) {
+      return gitErrorResponse("No request body", "upload-pack");
+    }
+
+    const result = await handleUploadPackV2(
+      {
+        db: this.db,
+        refs: this.refs,
+        objects: this.objects,
+        waitUntil: (promise: Promise<unknown>) => this.ctx.waitUntil(promise),
+      },
+      request.body
+    );
+
+    if (result.isErr()) {
+      return gitErrorResponse(result.error.message, "upload-pack");
+    }
+
+    return result.value;
   }
 }

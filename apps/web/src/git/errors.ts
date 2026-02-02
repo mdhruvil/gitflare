@@ -5,7 +5,12 @@ export class ProtocolError extends TaggedError("ProtocolError")<{
     | "INVALID_PKT_LINE"
     | "MALFORMED_COMMAND"
     | "MISSING_FLUSH"
-    | "INVALID_PACKFILE";
+    | "INVALID_PACKFILE"
+    // upload-pack specific
+    | "INVALID_WANT"
+    | "TRAVERSAL_ERROR"
+    | "PACK_WRITE_ERROR"
+    | "REPO_TOO_LARGE";
   detail?: string;
 }>() {}
 

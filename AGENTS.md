@@ -13,9 +13,7 @@ Gitflare is a selfhosted GitHub alternative which can be hosted on serverless pl
 
 - Never run `dev` or `build` commands, unless explicitly instructed.
 - After making code changes, always run the linter with `pnpm check:fix` to ensure code quality and adherence to guidelines.
-- Always fetch latest docs for the library or tool you are working with.
-  - For shadcn/ui components, refer to https://ui.shadcn.com/llms.txt for full docs list. You can add `.md` after any docs page URL to get the markdown version. ALWAYS prefer markdown docs. ONLY use `pnpm` to install new components.
-  - For other libraries or tools, use context7 mcp server to fetch latest docs.
+- Do not create useless comments that simply describe what the code already says. Comments are for adding context around the code when that context is not immediately obvious.
 
 ## Build/Lint/Test Commands
 

@@ -18,6 +18,7 @@ export type ReceivePackContext = {
   refs: RefStore;
   indexer: PackIndexer;
   repoPath: string;
+  onIndexed?: (objectCount: number) => Promise<void>;
 };
 
 /**
@@ -118,7 +119,7 @@ async function processReceivePack(opts: ProcessReceivePackOpts): Promise<void> {
   const indexerStream = packfileStream.pipeThrough(collectingStream);
 
   const result = await Result.gen(async function* () {
-    yield* Result.await(
+    const indexResult = yield* Result.await(
       ctx.indexer.index(packId, r2Key, indexerStream, async (event) => {
         await progress.report(event);
       })
@@ -126,6 +127,8 @@ async function processReceivePack(opts: ProcessReceivePackOpts): Promise<void> {
 
     const packData = concatUint8Arrays(packChunks, packSize);
     yield* Result.await(ctx.r2.put(r2Key, packData));
+
+    await ctx.onIndexed?.(indexResult.objectCount);
 
     return Result.ok(undefined);
   });

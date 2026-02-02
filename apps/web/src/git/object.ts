@@ -117,4 +117,57 @@ function unwrap(
   return Result.ok({ type, data });
 }
 
-export const GitObject = { computeOid, wrap, unwrap };
+export type CommitWalkData = {
+  tree: string;
+  parents: string[];
+};
+
+/**
+ * Parse a commit object to extract tree and parent OIDs for graph traversal.
+ * This is a minimal parser focused only on what's needed for commit graph caching.
+ *
+ * Commit format:
+ * ```
+ * tree <tree-oid>\n
+ * parent <parent-oid>\n    (zero or more)
+ * author ...\n
+ * committer ...\n
+ * \n
+ * <message>
+ * ```
+ */
+function parseCommitForWalk(
+  data: Uint8Array
+): Result<CommitWalkData, ObjectError> {
+  const text = TEXT_DECODER.decode(data);
+  const lines = text.split("\n");
+
+  let tree: string | undefined;
+  const parents: string[] = [];
+
+  for (const line of lines) {
+    // Empty line marks end of headers
+    if (line === "") {
+      break;
+    }
+
+    if (line.startsWith("tree ")) {
+      tree = line.slice(5);
+    } else if (line.startsWith("parent ")) {
+      parents.push(line.slice(7));
+    }
+  }
+
+  if (!tree) {
+    return Result.err(
+      new ObjectError({
+        code: "INVALID_HEADER",
+        message: "Commit missing tree field",
+      })
+    );
+  }
+
+  return Result.ok({ tree, parents });
+}
+
+export const GitObject = { computeOid, wrap, unwrap, parseCommitForWalk };

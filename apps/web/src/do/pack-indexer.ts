@@ -6,6 +6,7 @@
  * - Computing OIDs for base objects
  * - Resolving REF_DELTA objects (in-memory + existing objects for thin packs)
  * - Batch inserting index entries into SQLite
+ * - Populating commit_graph cache for efficient ancestry traversal
  * - Progress reporting for streaming responses
  */
 
@@ -24,6 +25,12 @@ type IndexedObject = {
   compressedSize: number;
   isDelta: boolean;
   baseOid: string | undefined;
+};
+
+type CommitGraphEntry = {
+  oid: string;
+  treeOid: string;
+  parentOids: string[];
 };
 
 type IndexResult = {
@@ -97,6 +104,7 @@ export class PackIndexer {
     const resolvedObjects = new Map<string, ResolvedObjectData>();
     const pendingDeltas: PendingDelta[] = [];
     const indexEntries: IndexedObject[] = [];
+    const commitGraphEntries: CommitGraphEntry[] = [];
 
     let objectsTotal = 0;
 
@@ -174,6 +182,15 @@ export class PackIndexer {
         isDelta: false,
         baseOid: undefined,
       });
+
+      // Extract commit graph data for ancestry traversal cache
+      if (objectType === "commit") {
+        const commitResult = GitObject.parseCommitForWalk(data);
+        if (commitResult.isOk()) {
+          const { tree, parents } = commitResult.value;
+          commitGraphEntries.push({ oid, treeOid: tree, parentOids: parents });
+        }
+      }
     }
 
     // Now we resolve deltas
@@ -232,6 +249,19 @@ export class PackIndexer {
           baseOid: delta.baseHash,
         });
 
+        // Extract commit graph data for delta-resolved commits
+        if (base.type === "commit") {
+          const commitResult = GitObject.parseCommitForWalk(resolvedData);
+          if (commitResult.isOk()) {
+            const { tree, parents } = commitResult.value;
+            commitGraphEntries.push({
+              oid,
+              treeOid: tree,
+              parentOids: parents,
+            });
+          }
+        }
+
         // Remove from pending
         pendingDeltas.splice(i, 1);
         resolvedCount += 1;
@@ -259,7 +289,12 @@ export class PackIndexer {
     // Pass 3: Write to SQLite
     await onProgress?.({ type: "writing_index", count: indexEntries.length });
 
-    const writeResult = await this.writeIndex(packId, r2Key, indexEntries);
+    const writeResult = await this.writeIndex(
+      packId,
+      r2Key,
+      indexEntries,
+      commitGraphEntries
+    );
     if (writeResult.isErr()) {
       return writeResult;
     }
@@ -273,12 +308,13 @@ export class PackIndexer {
   }
 
   /**
-   * Write pack and object index entries to SQLite in a single transaction.
+   * Write pack, object index, and commit graph entries to SQLite in a single transaction.
    */
   private async writeIndex(
     packId: string,
     r2Key: string,
-    entries: IndexedObject[]
+    entries: IndexedObject[],
+    commitGraphEntries: CommitGraphEntry[]
   ): Promise<Result<void, PackIndexError>> {
     return Result.tryPromise({
       try: async () => {
@@ -305,6 +341,15 @@ export class PackIndexer {
                 baseOid: entry.baseOid,
               }))
             );
+          }
+
+          // Insert commit graph entries for ancestry traversal cache
+          for (let i = 0; i < commitGraphEntries.length; i += BATCH_SIZE) {
+            const batch = commitGraphEntries.slice(i, i + BATCH_SIZE);
+            await tx
+              .insert(schema.commitGraph)
+              .values(batch)
+              .onConflictDoNothing();
           }
         });
       },

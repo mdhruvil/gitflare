@@ -60,6 +60,7 @@ type R2PutValue =
 
 export class R2 {
   readonly #bucket: R2Bucket;
+  private req = 0;
 
   constructor(bucket: R2Bucket) {
     this.#bucket = bucket;
@@ -89,6 +90,8 @@ export class R2 {
   ): Promise<Result<R2ObjectBody, R2Error | NotFoundError>>;
 
   async get(key: string, options?: R2GetOptions) {
+    this.req += 1;
+    console.log(`[R2][${this.req}] GET ${key}`);
     return (
       await Result.tryPromise({
         try: () =>
