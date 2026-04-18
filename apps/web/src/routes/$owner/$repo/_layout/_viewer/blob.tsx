@@ -1,7 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckIcon, CopyIcon, DownloadIcon, FileIcon } from "lucide-react";
-import { useState } from "react";
+import {
+  CheckIcon,
+  CopyIcon,
+  DownloadIcon,
+  FileIcon,
+  LoaderIcon,
+} from "lucide-react";
+import { lazy, Suspense, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
@@ -12,7 +18,12 @@ import { components } from "@/components/md-components";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Skeleton } from "@/components/ui/skeleton";
+import { diffsStyleVariables, fileOptions } from "@/lib/diffs-config";
 import { formatBytes, getMimeType } from "@/lib/utils";
+
+const LazyDiffsFile = lazy(() =>
+  import("@pierre/diffs/react").then((m) => ({ default: m.File }))
+);
 
 const searchSchema = z.object({
   ref: z.string().optional(),
@@ -186,32 +197,68 @@ function RouteComponent() {
           </ButtonGroup>
         </div>
         <div className="overflow-hidden">
-          <BlobContent blob={blob} content={content} filename={filename} />
+          <BlobContent
+            content={content}
+            contentBase64={blob.content}
+            filename={filename}
+            isBinary={blob.isBinary}
+            size={blob.size}
+          />
         </div>
       </div>
     </div>
   );
 }
 
+function PlainTextViewer({ content }: { content: string }) {
+  const lines = content.split("\n");
+  const gutterWidth = String(lines.length).length;
+  return (
+    <div className="overflow-x-auto font-mono text-[13px] leading-5">
+      <table className="border-collapse">
+        <tbody>
+          {lines.map((line, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: line numbers are stable
+            <tr key={i}>
+              <td
+                className="sticky left-0 select-none px-3 text-right text-muted-foreground/40"
+                style={{ minWidth: `${gutterWidth + 2}ch` }}
+              >
+                {i + 1}
+              </td>
+              <td className="whitespace-pre pr-6 pl-4">{line}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 type BlobContentProps = {
-  blob: {
-    content: string;
-    size: number;
-    isBinary: boolean;
-    highlightedHtml?: string | null;
-  };
+  size: number;
+  isBinary: boolean;
   filename: string;
+  /** Decoded text content (empty for binary files) */
   content: string;
+  /** Raw base64-encoded content (needed for binary image rendering) */
+  contentBase64: string;
 };
 
-function BlobContent({ blob, filename, content }: BlobContentProps) {
+function BlobContent({
+  isBinary,
+  filename,
+  content,
+  contentBase64,
+  size,
+}: BlobContentProps) {
   const isMarkdown = filename.toLowerCase().match(/\.(md|mdx|markdown)$/);
   const isImage = filename
     .toLowerCase()
     .match(/\.(png|jpe?g|gif|svg|webp|bmp|ico|avif)$/);
 
   // Handle binary image files
-  if (blob.isBinary && isImage) {
+  if (isBinary && isImage) {
     return (
       <div className="flex flex-col items-center justify-center bg-muted/30">
         {/* biome-ignore lint/correctness/useImageSize: Dynamic image dimensions unknown until loaded */}
@@ -219,14 +266,14 @@ function BlobContent({ blob, filename, content }: BlobContentProps) {
           alt={filename}
           className="max-w-full object-contain"
           loading="lazy"
-          src={`data:${getMimeType(filename)};base64,${blob.content}`}
+          src={`data:${getMimeType(filename)};base64,${contentBase64}`}
         />
       </div>
     );
   }
 
   // Handle other binary files
-  if (blob.isBinary) {
+  if (isBinary) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <FileIcon className="mb-4 size-12 text-muted-foreground" />
@@ -235,7 +282,7 @@ function BlobContent({ blob, filename, content }: BlobContentProps) {
           This file cannot be displayed because it is a binary file.
         </p>
         <p className="mt-2 text-muted-foreground text-xs">
-          Size: {formatBytes(blob.size, { decimals: 2 })}
+          Size: {formatBytes(size, { decimals: 2 })}
         </p>
       </div>
     );
@@ -256,21 +303,32 @@ function BlobContent({ blob, filename, content }: BlobContentProps) {
     );
   }
 
-  // Handle code files with syntax highlighting
-  if (blob.highlightedHtml) {
-    return (
-      <div
-        className="shiki-wrapper text-sm leading-relaxed [counter-reset:line] [&_pre]:overflow-x-auto [&_pre]:bg-transparent! [&_pre]:p-4! [&_pre_.line:before]:mr-4 [&_pre_.line:before]:inline-block [&_pre_.line:before]:w-8 [&_pre_.line:before]:text-right [&_pre_.line:before]:text-muted-foreground [&_pre_.line:before]:[content:counter(line)] [&_pre_.line]:[counter-increment:line]"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: Shiki generates safe HTML on server
-        dangerouslySetInnerHTML={{ __html: blob.highlightedHtml }}
-      />
-    );
+  // Files without a real extension (LICENSE, Makefile, .gitignore, .env, etc.)
+  // are rendered as plain text -- @pierre/diffs hangs on these.
+  // A "real" extension is a dot that isn't the first character, with chars after it.
+  const lastDotIndex = filename.lastIndexOf(".");
+  const hasCodeExtension =
+    lastDotIndex > 0 && lastDotIndex < filename.length - 1;
+
+  if (!hasCodeExtension) {
+    return <PlainTextViewer content={content} />;
   }
 
-  // Fallback for plain text files without highlighting
+  // Handle code files with syntax highlighting via @pierre/diffs
   return (
-    <div className="p-4">
-      <pre className="whitespace-pre-wrap font-mono text-sm">{content}</pre>
+    <div style={diffsStyleVariables}>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center py-12">
+            <LoaderIcon className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        }
+      >
+        <LazyDiffsFile
+          file={{ name: filename, contents: content }}
+          options={fileOptions}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -1,20 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { createHighlighter } from "shiki";
-import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import * as z from "zod";
 import { getRepoDOStub } from "@/do/repo";
-import { getLanguageFromFilename } from "@/lib/utils";
-
-// Create highlighter instance with JavaScript regex engine
-const highlighterPromise = createHighlighter({
-  themes: ["github-dark-default"],
-  langs: [],
-  engine: createJavaScriptRegexEngine({
-    forgiving: true,
-  }),
-});
 
 export const getTreeFnSchema = z.object({
   owner: z.string(),
@@ -78,46 +66,11 @@ export const getBlobFn = createServerFn({ method: "GET" })
 
     const contentBase64 = contentBuffer.toString("base64");
 
-    // Check if it's markdown
-    const filename = data.filepath.split("/").pop() || data.filepath;
-    const isMarkdown = filename.toLowerCase().match(/\.(md|mdx|markdown)$/);
-
-    // Generate syntax-highlighted HTML for non-binary, non-markdown files
-    let highlightedHtml: string | null = null;
-    if (!blob.isBinary && !isMarkdown) {
-      const language = getLanguageFromFilename(filename);
-      const highlighter = await highlighterPromise;
-
-      // Decode content for highlighting
-      const decoder = new TextDecoder("utf-8");
-      const content = decoder.decode(contentBuffer);
-
-      try {
-        await highlighter.loadLanguage(language);
-      } catch {
-        // Language not found, will use no highlighting
-        console.warn(`Language "${language}" not found for file "${filename}"`);
-      }
-
-      highlightedHtml = highlighter.codeToHtml(content, {
-        lang: language,
-        theme: "github-dark-default",
-        transformers: [
-          {
-            line(node, line) {
-              node.properties["data-line"] = line;
-            },
-          },
-        ],
-      });
-    }
-
     return {
       oid: blob.oid,
       content: contentBase64,
       size: blob.size,
       isBinary: blob.isBinary,
-      highlightedHtml,
     };
   });
 

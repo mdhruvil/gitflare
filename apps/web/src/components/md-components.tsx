@@ -5,7 +5,6 @@
 
 import { type JSX, memo } from "react";
 import type { Components } from "react-markdown";
-import ShikiHighlighter from "react-shiki";
 import { cn } from "../lib/utils";
 
 type MarkdownPoint = { line?: number; column?: number };
@@ -374,19 +373,12 @@ const MemoCode = memo<CodeProps>(
     }
 
     const cleanCode = codeString.replace(/\n$/, "");
-    const match = /language-(\w+)/.exec(className || "");
-    const language = match?.[1] || "text";
 
     return (
-      <div className="my-4">
-        <ShikiHighlighter
-          className={cn("overflow-x-auto rounded-lg border", className)}
-          language={language}
-          showLanguage={false}
-          theme="github-dark-default"
-        >
-          {cleanCode}
-        </ShikiHighlighter>
+      <div className="my-4 overflow-x-auto rounded-lg border bg-muted/30">
+        <pre className="overflow-x-auto p-4 font-mono text-sm">
+          <code>{cleanCode}</code>
+        </pre>
       </div>
     );
   },

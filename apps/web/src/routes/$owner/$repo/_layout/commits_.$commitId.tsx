@@ -1,17 +1,17 @@
-import { generateDiffFile } from "@git-diff-view/file";
-import { DiffModeEnum, DiffView } from "@git-diff-view/react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { CheckIcon, CopyIcon, FileIcon, GitCommitIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { getCommitQueryOptions } from "@/api/commits";
 import { NotFoundComponent } from "@/components/404-components";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getLanguageFromFilename } from "@/lib/utils";
-import "@git-diff-view/react/styles/diff-view-pure.css";
+import { diffOptionsWithHeader, diffsStyleVariables } from "@/lib/diffs-config";
+
+const LazyMultiFileDiff = lazy(() =>
+  import("@pierre/diffs/react").then((m) => ({ default: m.MultiFileDiff }))
+);
 
 export const Route = createFileRoute(
   "/$owner/$repo/_layout/commits_/$commitId"
@@ -116,7 +116,7 @@ function RouteComponent() {
                   {commit.author.name}
                 </span>
                 {commit.author.email && (
-                  <span className="text-muted-foreground text-xs">
+                  <span className="font-mono text-muted-foreground text-xs">
                     &lt;{commit.author.email}&gt;
                   </span>
                 )}
@@ -165,29 +165,30 @@ function RouteComponent() {
       </Card>
 
       {/* File Changes Summary */}
-      <div className="flex items-center gap-4">
-        <h2 className="font-semibold text-lg">
+      <div className="flex items-center gap-3 font-mono text-sm">
+        <span className="font-semibold">
           {totalFilesChanged === 1
             ? "1 file changed"
             : `${totalFilesChanged} files changed`}
-        </h2>
-        <div className="flex items-center gap-2">
-          {stats.filesAdded > 0 && (
-            <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
-              +{stats.filesAdded} added
-            </Badge>
-          )}
-          {stats.filesModified > 0 && (
-            <Badge className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20">
-              {stats.filesModified} modified
-            </Badge>
-          )}
-          {stats.filesDeleted > 0 && (
-            <Badge className="bg-red-500/10 text-red-600 hover:bg-red-500/20">
-              -{stats.filesDeleted} deleted
-            </Badge>
-          )}
-        </div>
+        </span>
+        {stats.filesAdded > 0 && (
+          <span className="text-green-500">
+            +{stats.filesAdded} {stats.filesAdded === 1 ? "file" : "files"}{" "}
+            added
+          </span>
+        )}
+        {stats.filesModified > 0 && (
+          <span className="text-yellow-500">
+            ~{stats.filesModified}{" "}
+            {stats.filesModified === 1 ? "file" : "files"} modified
+          </span>
+        )}
+        {stats.filesDeleted > 0 && (
+          <span className="text-red-500">
+            -{stats.filesDeleted} {stats.filesDeleted === 1 ? "file" : "files"}{" "}
+            deleted
+          </span>
+        )}
       </div>
 
       {/* File Changes */}
@@ -205,44 +206,18 @@ function RouteComponent() {
         )}
 
         {changes.map((change) => {
-          const filename = change.path.split("/").pop() || change.path;
-          const language = getLanguageFromFilename(filename);
           const isBinary =
             (change.old?.isBinary ?? false) || (change.new?.isBinary ?? false);
 
-          const typeBadges = {
-            add: {
-              className: "bg-green-500/10 text-green-600",
-              label: "added",
-            },
-            remove: {
-              className: "bg-red-500/10 text-red-600",
-              label: "deleted",
-            },
-            modify: {
-              className: "bg-yellow-500/10 text-yellow-600",
-              label: "modified",
-            },
-          };
-
-          return (
-            <div
-              className="overflow-hidden rounded-lg border"
-              key={change.path}
-            >
-              {/* File Header */}
-              <div className="flex items-center justify-between border-b bg-muted/50 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <FileIcon className="size-4 text-muted-foreground" />
+          if (isBinary) {
+            return (
+              <div
+                className="overflow-hidden rounded-lg border"
+                key={change.path}
+              >
+                <div className="flex items-center border-b bg-muted/50 px-4 py-3">
                   <span className="font-mono text-sm">{change.path}</span>
-
-                  <Badge className={typeBadges[change.type].className}>
-                    {typeBadges[change.type].label}
-                  </Badge>
                 </div>
-              </div>
-
-              {isBinary ? (
                 <div className="flex flex-col items-center justify-center bg-muted/30 px-4 py-12 text-center">
                   <FileIcon className="mb-3 size-10 text-muted-foreground" />
                   <p className="font-medium text-sm">Binary file</p>
@@ -250,58 +225,39 @@ function RouteComponent() {
                     Binary files cannot be displayed
                   </p>
                 </div>
-              ) : (
-                <Diff
-                  language={language}
-                  newContent={change.new?.content ?? null}
-                  newPath={change.path}
-                  oldContent={change.old?.content ?? null}
-                  oldPath={change.path}
+              </div>
+            );
+          }
+
+          return (
+            <div
+              className="overflow-hidden rounded-lg"
+              key={change.path}
+              style={diffsStyleVariables}
+            >
+              <Suspense
+                fallback={
+                  <div className="p-4 text-muted-foreground text-sm">
+                    Loading diff...
+                  </div>
+                }
+              >
+                <LazyMultiFileDiff
+                  newFile={{
+                    name: change.path,
+                    contents: change.new?.content ?? "",
+                  }}
+                  oldFile={{
+                    name: change.path,
+                    contents: change.old?.content ?? "",
+                  }}
+                  options={diffOptionsWithHeader}
                 />
-              )}
+              </Suspense>
             </div>
           );
         })}
       </div>
     </div>
-  );
-}
-
-type DiffProps = {
-  oldPath: string | null;
-  oldContent: string | null;
-  newPath: string | null;
-  newContent: string | null;
-  language: string | null;
-};
-
-function Diff({
-  oldPath,
-  oldContent,
-  newPath,
-  newContent,
-  language,
-}: DiffProps) {
-  const diffFile = useMemo(() => {
-    const instance = generateDiffFile(
-      oldPath ?? "",
-      oldContent ?? "",
-      newPath ?? "",
-      newContent ?? "",
-      language ?? "txt",
-      language ?? "txt"
-    );
-    instance.initRaw();
-    return instance;
-  }, [oldPath, oldContent, newPath, newContent, language]);
-
-  return (
-    <DiffView
-      diffFile={diffFile}
-      diffViewFontSize={14}
-      diffViewHighlight
-      diffViewMode={DiffModeEnum.Unified}
-      diffViewTheme="dark"
-    />
   );
 }

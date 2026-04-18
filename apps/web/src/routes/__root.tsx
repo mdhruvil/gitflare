@@ -1,5 +1,7 @@
 import interWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import interUrl from "@fontsource-variable/inter/index.css?url";
+import jetbrainsMonoWoff2 from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
+import jetbrainsMonoUrl from "@fontsource-variable/jetbrains-mono/index.css?url";
 import type { QueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
@@ -74,9 +76,20 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         href: interUrl,
       },
       {
+        rel: "stylesheet",
+        href: jetbrainsMonoUrl,
+      },
+      {
         rel: "preload",
         as: "font",
         href: interWoff2,
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "preload",
+        as: "font",
+        href: jetbrainsMonoWoff2,
         type: "font/woff2",
         crossOrigin: "anonymous",
       },
