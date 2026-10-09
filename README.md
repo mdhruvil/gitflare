@@ -1,9 +1,13 @@
 # Gitflare
 
-A self-hosted GitHub alternative built to run on Cloudflare Developer Platform. Built on top of Cloudflare Workers, Durable Objects.
+> [!IMPORTANT]
+> Gitflare is no longer being developed.
+>
+> Cloudflare has built [Artifacts](https://developers.cloudflare.com/artifacts/). Versioned storage that speaks Git. Please use Artifacts instead.
+>
+> [Get started with Artifacts](https://developers.cloudflare.com/artifacts/get-started/).
 
-> [!WARNING]
-> Gitflare is currently in very early development. Expect bugs and missing features.
+A self-hosted GitHub alternative built to run on Cloudflare Developer Platform. Built on top of Cloudflare Workers, Durable Objects.
 
 ## Features
 
